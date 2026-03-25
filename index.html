@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎰 SlotDB</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg: #f5f3ef;
+  --bg2: #eeeae3;
+  --white: #ffffff;
+  --card: #ffffff;
+  --border: #e8e2d8;
+  --border2: #d8d0c4;
+
+  --tx: #2d2720;
+  --tx2: #6b5e52;
+  --tx3: #9e9085;
+  --tx4: #c4bbb0;
+
+  /* provider pastels */
+  --hk-bg: #fff0eb; --hk: #e85c30; --hk-soft: #ffd8cc;
+  --nl-bg: #f3eeff; --nl: #7c4fd0; --nl-soft: #dfd0ff;
+  --elk-bg: #e8f9f7; --elk: #1aad9a; --elk-soft: #b8ede8;
+  --png-bg: #edfff3; --png: #1ab868; --png-soft: #b8f0d0;
+  --sl-bg:  #fff0f3; --sl:  #e83058; --sl-soft: #ffc8d4;
+
+  /* accents */
+  --peach: #ff8c5a;
+  --mint:  #34c9a8;
+  --sky:   #5ab4ff;
+  --lilac: #a07ee8;
+  --rose:  #f06080;
+  --yellow:#f5c842;
+
+  --r-sm: 10px;
+  --r: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+
+  --shadow: 0 2px 12px rgba(45,39,32,.07);
+  --shadow-lg: 0 8px 32px rgba(45,39,32,.12);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--tx); font-family: 'Nunito', sans-serif; font-size: 13px; height: 100vh; display: flex; overflow: hidden; }
+
+/* ── SIDEBAR ── */
+aside {
+  width: 220px; min-width: 220px;
+  background: var(--white);
+  border-right: 1.5px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow: hidden; z-index: 10;
+  box-shadow: 2px 0 16px rgba(45,39,32,.04);
+}
+.logo {
+  padding: 22px 18px 16px;
+  border-bottom: 1.5px solid var(--border);
+}
+.logo-inner { display: flex; align-items: center; gap: 10px; }
+.logo-icon {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: linear-gradient(135deg, #ff9a6c, #f06080);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; box-shadow: 0 4px 12px rgba(240,96,128,.3);
+}
+.logo h1 { font-size: 1.1rem; font-weight: 900; color: var(--tx); }
+.logo span { display: block; font-size: 10px; color: var(--tx3); font-weight: 600; margin-top: 1px; }
+
+.nav-sec { padding: 16px 16px 6px; font-size: 10px; font-weight: 800; color: var(--tx4); text-transform: uppercase; letter-spacing: 1.5px; }
+.nav-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; margin: 2px 10px;
+  border-radius: var(--r-sm); cursor: pointer;
+  color: var(--tx2); font-size: 12.5px; font-weight: 600;
+  transition: all .18s; border: none; background: none;
+}
+.nav-btn:hover { background: var(--bg); color: var(--tx); }
+.nav-btn.on { background: var(--bg); color: var(--tx); font-weight: 800; }
+.nav-btn.on .nav-pill { opacity: 1; transform: scale(1); }
+.nav-pill {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+  opacity: .5; transform: scale(.8); transition: all .18s;
+}
+.p0{background:var(--yellow)}.p1{background:var(--hk)}.p2{background:var(--nl)}
+.p3{background:var(--elk)}.p4{background:var(--png)}.p5{background:var(--sl)}
+aside footer {
+  margin-top: auto; padding: 14px 16px;
+  border-top: 1.5px solid var(--border);
+  font-size: 10px; color: var(--tx4); font-weight: 600;
+}
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* topbar */
+.topbar {
+  padding: 14px 24px; background: var(--white);
+  border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.topbar h2 { font-size: .95rem; font-weight: 900; flex: 1; color: var(--tx); }
+.search { position: relative; }
+.search input {
+  background: var(--bg); border: 1.5px solid var(--border);
+  color: var(--tx); padding: 8px 12px 8px 32px;
+  font-family: 'Nunito', sans-serif; font-size: 12.5px; font-weight: 600;
+  border-radius: 50px; outline: none; width: 200px;
+  transition: all .2s;
+}
+.search input:focus { border-color: var(--peach); background: var(--white); box-shadow: 0 0 0 3px rgba(255,140,90,.12); }
+.search input::placeholder { color: var(--tx4); }
+.search::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; pointer-events: none; }
+
+.tbtn {
+  padding: 8px 14px; border-radius: 50px;
+  font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all .18s;
+  border: 1.5px solid var(--border2); color: var(--tx2); background: var(--white);
+}
+.tbtn:hover { border-color: var(--tx3); color: var(--tx); }
+.tbtn-add {
+  background: linear-gradient(135deg, #ff9a6c, #f06080);
+  color: #fff; border: none;
+  box-shadow: 0 4px 14px rgba(240,96,128,.35);
+}
+.tbtn-add:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(240,96,128,.45); color: #fff; }
+.tbtn-csv { border-color: var(--mint); color: var(--mint); }
+.tbtn-csv:hover { background: var(--elk-bg); }
+
+/* pages */
+.pages { flex: 1; overflow: hidden; display: flex; }
+.page { display: none; flex: 1; overflow-y: auto; padding: 20px 24px 48px; }
+.page.on { display: block; }
+
+/* stats */
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 20px; }
+.stat {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.stat .n { font-size: 1.8rem; font-weight: 900; line-height: 1; }
+.stat .l { font-size: 10px; color: var(--tx3); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+.s0 .n { color: var(--peach); } .s1 .n { color: var(--mint); }
+.s2 .n { color: var(--lilac); } .s3 .n { color: var(--rose); }
+
+/* table card */
+.tcard {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+thead tr { background: var(--bg); border-bottom: 1.5px solid var(--border); }
+th {
+  padding: 11px 12px; color: var(--tx3); font-size: 10px;
+  text-transform: uppercase; letter-spacing: 1.5px; text-align: left;
+  cursor: pointer; white-space: nowrap; font-weight: 800;
+}
+th:hover { color: var(--tx2); }
+tbody tr { border-bottom: 1px solid var(--bg); cursor: pointer; transition: background .12s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg); }
+tbody tr.sel { background: #fff8f0; box-shadow: inset 3px 0 0 var(--peach); }
+td { padding: 11px 12px; vertical-align: middle; }
+
+/* cell styles */
+.t-thumb {
+  width: 48px; height: 32px; border-radius: 8px;
+  object-fit: cover; background: var(--bg2); display: block;
+}
+.t-name { font-size: 13px; font-weight: 800; color: var(--tx); }
+.t-sub { font-size: 10px; color: var(--tx3); font-weight: 600; margin-top: 2px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 50px; font-size: 10px; font-weight: 800;
+  white-space: nowrap; letter-spacing: .3px;
+}
+.b-hk { background: var(--hk-bg); color: var(--hk); }
+.b-nl { background: var(--nl-bg); color: var(--nl); }
+.b-elk { background: var(--elk-bg); color: var(--elk); }
+.b-png { background: var(--png-bg); color: var(--png); }
+.b-sl  { background: var(--sl-bg);  color: var(--sl); }
+
+.conn {
+  display: inline-flex; padding: 3px 8px; border-radius: 50px;
+  font-size: 10px; font-weight: 700; white-space: nowrap;
+}
+.cw { background: #eeeaff; color: var(--lilac); }
+.cc { background: #fff8e0; color: #c89820; }
+.cs { background: var(--sl-bg); color: var(--sl); }
+.cl { background: var(--elk-bg); color: var(--elk); }
+.cm { background: var(--hk-bg); color: var(--hk); }
+
+.ftag {
+  display: inline-flex; padding: 2px 7px; border-radius: 50px;
+  font-size: 10px; font-weight: 700;
+  background: #fef3e8; color: var(--peach); white-space: nowrap;
+}
+.ftag.off { background: var(--bg); color: var(--tx4); }
+
+.rtp { color: var(--mint); font-weight: 800; }
+.mxw { color: var(--rose); font-weight: 800; }
+.grd { color: var(--lilac); font-weight: 700; }
+
+.vbadge { padding: 3px 9px; border-radius: 50px; font-size: 10px; font-weight: 800; }
+.vh { background: #fff0f0; color: var(--rose); }
+.vm { background: #fff8e8; color: #d08820; }
+.ve { background: #fce8f0; color: #c02850; }
+
+.act button {
+  background: var(--bg); border: 1.5px solid var(--border);
+  color: var(--tx3); width: 26px; height: 26px; border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; transition: all .15s; font-family: 'Nunito',sans-serif;
+}
+.act button:hover { border-color: var(--peach); color: var(--peach); background: #fff5f0; }
+.act .d:hover { border-color: var(--rose); color: var(--rose); background: var(--sl-bg); }
+
+.mdiv td { padding: 16px 12px 4px; }
+.mlbl {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 2px; color: var(--tx4);
+}
+.empty { text-align: center; padding: 60px 20px; color: var(--tx3); }
+.empty .ei { font-size: 2.5rem; margin-bottom: 8px; }
+.empty p { font-weight: 700; }
+
+/* ── SIDE PANEL ── */
+.sp {
+  position: fixed; right: 0; top: 0; bottom: 0; width: 480px;
+  background: var(--white); border-left: 1.5px solid var(--border);
+  z-index: 200; transform: translateX(100%);
+  transition: transform .28s cubic-bezier(.4,0,.2,1);
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: -8px 0 40px rgba(45,39,32,.1);
+}
+.sp.open { transform: translateX(0); }
+.sp-head {
+  padding: 14px 16px; border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  background: var(--white);
+}
+.sp-head-title { font-size: 11px; font-weight: 800; color: var(--tx3); text-transform: uppercase; letter-spacing: 1.5px; }
+.sp-x {
+  background: var(--bg); border: 1.5px solid var(--border);
+  color: var(--tx3); width: 30px; height: 30px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; transition: all .15s; font-family: 'Nunito',sans-serif;
+}
+.sp-x:hover { background: var(--sl-bg); border-color: var(--rose); color: var(--rose); }
+.sp-body { flex: 1; overflow-y: auto; }
+
+/* hero */
+.sp-hero { position: relative; height: 190px; flex-shrink: 0; overflow: hidden; }
+.sp-hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sp-hero-fallback {
+  width: 100%; height: 100%; display: none; align-items: center; justify-content: center;
+  font-size: 4rem; background: linear-gradient(135deg, #fff4ef, #fce8f0);
+}
+.sp-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,.3) 40%, transparent 100%); }
+.sp-hero-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 16px 18px; }
+.sp-hero-name { font-size: 1.25rem; font-weight: 900; color: var(--tx); line-height: 1.15; }
+.sp-hero-sub { margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* quick strip */
+.sp-strip {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 10px; padding: 14px 16px;
+  border-bottom: 1.5px solid var(--border); flex-shrink: 0;
+}
+.sp-strip-item {
+  background: var(--bg); border-radius: var(--r-sm);
+  padding: 10px 10px; text-align: center;
+}
+.sp-strip-item .sv { font-size: 14px; font-weight: 900; line-height: 1; }
+.sp-strip-item .sk { font-size: 9px; color: var(--tx3); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+
+/* tabs */
+.sp-tabs {
+  display: flex; border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0; padding: 0 16px; gap: 2px; background: var(--white);
+}
+.sp-tab {
+  padding: 11px 10px; font-size: 12px; font-weight: 700; color: var(--tx3);
+  cursor: pointer; border-bottom: 2.5px solid transparent;
+  transition: all .15s; white-space: nowrap;
+}
+.sp-tab:hover { color: var(--tx2); }
+.sp-tab.on { color: var(--peach); border-bottom-color: var(--peach); font-weight: 800; }
+.sp-pane { display: none; padding: 18px 18px 32px; }
+.sp-pane.on { display: block; }
+
+/* overview sections */
+.sec { margin-bottom: 20px; }
+.sec-h {
+  font-size: 10px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--tx3); margin-bottom: 10px;
+  display: flex; align-items: center; gap: 6px;
+}
+.sec-h::before { content: ''; display: block; width: 3px; height: 12px; background: var(--peach); border-radius: 2px; }
+
+.spec-tbl { width: 100%; border-collapse: collapse; }
+.spec-tbl tr { border-bottom: 1px solid var(--bg); }
+.spec-tbl tr:last-child { border-bottom: none; }
+.spec-tbl td { padding: 7px 6px; font-size: 12.5px; }
+.spec-tbl td:first-child { color: var(--tx3); font-weight: 700; width: 42%; }
+.spec-tbl td:last-child { color: var(--tx); font-weight: 700; }
+
+/* rules */
+.rules-body { font-size: 12.5px; line-height: 1.9; color: var(--tx2); font-weight: 500; }
+.rules-body h3 {
+  font-size: 12px; font-weight: 800; color: var(--tx);
+  margin: 18px 0 7px; display: flex; align-items: center; gap: 7px;
+}
+.rules-body h3::before {
+  content: ''; display: block; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--peach); flex-shrink: 0;
+}
+.rules-body h3:first-child { margin-top: 0; }
+.rules-body p { margin-bottom: 8px; }
+.rules-body strong { color: var(--tx); font-weight: 800; }
+.rules-body em { color: var(--peach); font-style: normal; font-weight: 700; }
+.callout {
+  background: #fff8f0; border: 1.5px solid #fde0c0;
+  border-radius: var(--r-sm); padding: 10px 14px;
+  margin: 12px 0; font-size: 12px; color: var(--tx2); line-height: 1.7;
+}
+.callout.warn { background: var(--sl-bg); border-color: #ffc0cc; color: #c02850; }
+
+/* mech cards */
+.mech-list { display: flex; flex-direction: column; gap: 10px; }
+.mech-card {
+  background: var(--bg); border-radius: var(--r);
+  padding: 14px 15px; display: flex; gap: 13px; align-items: flex-start;
+  border: 1.5px solid var(--border); transition: border-color .15s;
+}
+.mech-card:hover { border-color: var(--peach); }
+.mech-icon {
+  width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+  background: var(--white); display: flex; align-items: center;
+  justify-content: center; font-size: 1.2rem;
+  border: 1.5px solid var(--border); box-shadow: var(--shadow);
+}
+.mech-name { font-size: 12.5px; font-weight: 800; color: var(--tx); }
+.mech-tag {
+  display: inline-block; margin: 4px 0; padding: 2px 8px;
+  border-radius: 50px; font-size: 10px; font-weight: 700;
+  background: var(--nl-bg); color: var(--nl);
+}
+.mech-desc { font-size: 11.5px; color: var(--tx2); line-height: 1.7; font-weight: 500; margin-top: 3px; }
+
+/* pros/cons */
+.pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pc-box { background: var(--bg); border-radius: var(--r); padding: 14px; border: 1.5px solid var(--border); }
+.pc-box.pro { border-top: 3px solid var(--mint); }
+.pc-box.con { border-top: 3px solid var(--rose); }
+.pc-box h4 { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+.pc-box.pro h4 { color: var(--mint); } .pc-box.con h4 { color: var(--rose); }
+.pc-box ul { list-style: none; }
+.pc-box li { font-size: 11.5px; color: var(--tx2); padding: 4px 0; display: flex; gap: 6px; line-height: 1.55; font-weight: 600; }
+.pc-box.pro li::before { content: '✓'; color: var(--mint); font-weight: 900; flex-shrink: 0; }
+.pc-box.con li::before { content: '✕'; color: var(--rose); font-weight: 900; flex-shrink: 0; }
+
+/* RTP bars */
+.rtp-wrap { display: flex; flex-direction: column; gap: 8px; }
+.rtp-row { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+.rtp-lbl { color: var(--tx3); font-weight: 700; width: 50px; flex-shrink: 0; }
+.rtp-bar-bg { flex: 1; height: 7px; background: var(--bg2); border-radius: 50px; overflow: hidden; }
+.rtp-bar-fill { height: 100%; border-radius: 50px; transition: width .5s .1s; }
+.rtp-v { font-weight: 800; color: var(--tx); width: 44px; text-align: right; }
+
+.demo-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: linear-gradient(135deg, #ff9a6c, #f06080);
+  color: #fff; padding: 10px 20px; border-radius: 50px;
+  font-size: 12.5px; font-weight: 800; text-decoration: none;
+  margin-top: 6px; transition: all .18s;
+  box-shadow: 0 4px 14px rgba(240,96,128,.3);
+}
+.demo-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(240,96,128,.45); }
+
+/* ── PROVIDER PAGE ── */
+.prov-banner {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--r-lg); padding: 18px 20px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: var(--shadow);
+}
+.prov-stripe { width: 5px; height: 44px; border-radius: 50px; flex-shrink: 0; }
+.prov-name { font-size: 1.15rem; font-weight: 900; color: var(--tx); }
+.prov-info { font-size: 11px; color: var(--tx3); font-weight: 600; margin-top: 3px; }
+.prov-info a { color: inherit; text-decoration: none; }
+.month-tabs { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+.mtab {
+  padding: 6px 12px; background: var(--bg); border: 1.5px solid var(--border);
+  color: var(--tx3); border-radius: 50px; cursor: pointer;
+  font-size: 11px; font-weight: 700; font-family: 'Nunito',sans-serif;
+  transition: all .15s;
+}
+.mtab.on, .mtab:hover { border-color: var(--peach); color: var(--peach); background: #fff5f0; }
+.pstats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+.pnote {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--r); padding: 14px 16px;
+  font-size: 12px; line-height: 1.85; color: var(--tx2);
+  font-weight: 500; margin-top: 16px; box-shadow: var(--shadow);
+}
+.pnote strong { color: var(--tx); font-weight: 800; }
+
+/* ── MODAL ── */
+.overlay { display: none; position: fixed; inset: 0; background: rgba(45,39,32,.4); z-index: 500; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+.overlay.open { display: flex; }
+.modal {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: var(--r-xl); padding: 28px; width: 660px;
+  max-width: 95vw; max-height: 88vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.modal h2 { font-size: 1rem; font-weight: 900; margin-bottom: 18px; }
+.fg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg.full { grid-column: 1/-1; }
+.fg label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--tx3); }
+.fg input, .fg select, .fg textarea {
+  background: var(--bg); border: 1.5px solid var(--border);
+  color: var(--tx); padding: 8px 12px;
+  font-family: 'Nunito', sans-serif; font-size: 12.5px; font-weight: 600;
+  border-radius: var(--r-sm); outline: none; transition: all .2s;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus { border-color: var(--peach); background: var(--white); box-shadow: 0 0 0 3px rgba(255,140,90,.1); }
+.fg select option { background: var(--white); }
+.fg textarea { resize: vertical; min-height: 65px; }
+.chks { display: flex; flex-wrap: wrap; gap: 8px; }
+.chks label { display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; color: var(--tx2); font-weight: 600; }
+.chks input[type=checkbox] { width: 14px; height: 14px; accent-color: var(--peach); }
+.modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.btn-cancel { background: var(--bg); border: 1.5px solid var(--border); color: var(--tx2); padding: 9px 18px; font-family: 'Nunito',sans-serif; font-size: 12.5px; font-weight: 700; border-radius: 50px; cursor: pointer; transition: all .15s; }
+.btn-cancel:hover { border-color: var(--tx3); }
+.btn-save { background: linear-gradient(135deg,#ff9a6c,#f06080); border: none; color: #fff; padding: 9px 22px; font-family: 'Nunito',sans-serif; font-size: 12.5px; font-weight: 800; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 14px rgba(240,96,128,.3); transition: all .15s; }
+.btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(240,96,128,.4); }
+
+/* animations */
+@keyframes fadeUp { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+tbody tr { animation: fadeUp .2s ease forwards; opacity: 0; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); border-radius: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--tx4); }
+
+@media(max-width:900px){
+  aside{width:54px;min-width:54px}
+  .nav-btn span,.nav-sec,.logo h1,.logo>span,aside footer{display:none}
+  .nav-btn{justify-content:center;padding:12px 0}
+  .logo-inner{justify-content:center}.logo-inner .logo>span{display:none}
+  .sp{width:100%}
+  .pc-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .fg-grid{grid-template-columns:1fr}.fg.full{grid-column:1}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside>
+  <div class="logo">
+    <div class="logo-inner">
+      <div class="logo-icon">🎰</div>
+      <div>
+        <h1>SlotDB</h1>
+        <span>廠商遊戲追蹤</span>
+      </div>
+    </div>
+  </div>
+  <div class="nav-sec">主要</div>
+  <div class="nav-btn on" id="nb-all" onclick="goPage('all')"><span class="nav-pill p0"></span><span>全部遊戲</span></div>
+  <div class="nav-sec">廠商月報</div>
+  <div class="nav-btn" id="nb-hacksaw" onclick="goPage('hacksaw')"><span class="nav-pill p1"></span><span>Hacksaw Gaming</span></div>
+  <div class="nav-btn" id="nb-nolimit" onclick="goPage('nolimit')"><span class="nav-pill p2"></span><span>NoLimit City</span></div>
+  <div class="nav-btn" id="nb-elk" onclick="goPage('elk')"><span class="nav-pill p3"></span><span>ELK Studios</span></div>
+  <div class="nav-btn" id="nb-playngo" onclick="goPage('playngo')"><span class="nav-pill p4"></span><span>Play'n GO</span></div>
+  <div class="nav-btn" id="nb-shady" onclick="goPage('shady')"><span class="nav-pill p5"></span><span>Shady Lady</span></div>
+  <footer>更新 2026-03-25 ✨</footer>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h2 id="page-h">全部遊戲 🎮</h2>
+    <div class="search"><input id="q" placeholder="搜尋遊戲、廠商…" oninput="renderMain()"></div>
+    <button class="tbtn tbtn-csv" onclick="exportCSV()">⬇ CSV</button>
+    <button class="tbtn tbtn-add" onclick="openModal()">＋ 新增遊戲</button>
+  </div>
+  <div class="pages">
+    <div class="page on" id="pg-all">
+      <div class="stats">
+        <div class="stat s0"><div class="n" id="st-tot">—</div><div class="l">遊戲總數</div></div>
+        <div class="stat s1"><div class="n" id="st-mo">—</div><div class="l">本月新增</div></div>
+        <div class="stat s2"><div class="n">5</div><div class="l">追蹤廠商</div></div>
+        <div class="stat s3"><div class="n" id="st-mw">—</div><div class="l">平均 Max Win</div></div>
+      </div>
+      <div class="tcard">
+        <table>
+          <thead><tr>
+            <th style="width:52px"></th>
+            <th onclick="sort('name')">遊戲名稱</th>
+            <th onclick="sort('provider')">廠商</th>
+            <th onclick="sort('releaseDate')">日期</th>
+            <th>連線</th><th>盤面</th>
+            <th onclick="sort('rtp')">RTP</th>
+            <th onclick="sort('maxwin')">Max Win</th>
+            <th>波動</th><th>功能</th><th></th>
+          </tr></thead>
+          <tbody id="tb"></tbody>
+        </table>
+        <div id="empty" class="empty" style="display:none">
+          <div class="ei">🔍</div><p>找不到符合條件的遊戲</p>
+        </div>
+      </div>
+    </div>
+    <div class="page" id="pg-hacksaw"></div>
+    <div class="page" id="pg-nolimit"></div>
+    <div class="page" id="pg-elk"></div>
+    <div class="page" id="pg-playngo"></div>
+    <div class="page" id="pg-shady"></div>
+  </div>
+</div>
+
+<!-- SIDE PANEL -->
+<div class="sp" id="sp">
+  <div class="sp-head">
+    <span class="sp-head-title">遊戲詳情</span>
+    <button class="sp-x" onclick="closePanel()">✕</button>
+  </div>
+  <div class="sp-body" id="sp-body"></div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="modal-ov">
+  <div class="modal">
+    <h2 id="m-title">＋ 新增遊戲 ✨</h2>
+    <div class="fg-grid">
+      <div class="fg full"><label>遊戲名稱 *</label><input id="m-name" placeholder="e.g. Dark Spiral"></div>
+      <div class="fg"><label>廠商 *</label>
+        <select id="m-prov"><option value="">選擇廠商…</option>
+          <option>Hacksaw Gaming</option><option>NoLimit City</option>
+          <option>ELK Studios</option><option>Play'n GO</option><option>Shady Lady</option><option>其他</option>
+        </select>
+      </div>
+      <div class="fg"><label>發布日期</label><input type="date" id="m-date"></div>
+      <div class="fg"><label>連線類型</label>
+        <select id="m-conn"><option value="">請選擇</option>
+          <option value="Ways">Ways</option><option value="Cluster Pays">Cluster Pays</option>
+          <option value="Scatter Pays">Scatter Pays</option><option value="Paylines">Paylines</option><option value="Meter Pay">Meter Pay</option>
+        </select>
+      </div>
+      <div class="fg"><label>盤面</label><input id="m-grid" placeholder="e.g. 6×4"></div>
+      <div class="fg"><label>RTP %（最高）</label><input id="m-rtp" placeholder="96.22"></div>
+      <div class="fg"><label>Max Win (x)</label><input id="m-mw" placeholder="10000"></div>
+      <div class="fg"><label>波動度</label>
+        <select id="m-vol"><option value="">請選擇</option><option>Extreme</option><option>High</option><option>Medium-High</option><option>Medium</option></select>
+      </div>
+      <div class="fg"><label>下注範圍</label><input id="m-bet" placeholder="0.10 – 100"></div>
+      <div class="fg"><label>封面圖片 URL</label><input id="m-img" placeholder="https://..."></div>
+      <div class="fg"><label>Demo / Review 連結</label><input id="m-link" placeholder="https://slots.info/..."></div>
+      <div class="fg full"><label>功能標籤</label>
+        <div class="chks">
+          <label><input type="checkbox" value="Free Spins"> Free Spins</label>
+          <label><input type="checkbox" value="Bonus Buy"> Bonus Buy</label>
+          <label><input type="checkbox" value="Cascading"> Cascading</label>
+          <label><input type="checkbox" value="Multiplier"> Multiplier</label>
+          <label><input type="checkbox" value="Wilds"> Wilds</label>
+          <label><input type="checkbox" value="Sticky Wilds"> Sticky Wilds</label>
+          <label><input type="checkbox" value="Megaways"> Megaways</label>
+          <label><input type="checkbox" value="xWays"> xWays</label>
+          <label><input type="checkbox" value="xNudge"> xNudge</label>
+          <label><input type="checkbox" value="X-iter"> X-iter</label>
+          <label><input type="checkbox" value="Jackpot"> Jackpot</label>
+        </div>
+      </div>
+      <div class="fg full"><label>一行摘要</label><input id="m-sum" placeholder="主題與核心機制簡述"></div>
+      <div class="fg full"><label>完整遊戲規則（支援 HTML：&lt;h3&gt;&lt;p&gt;&lt;strong&gt;&lt;em&gt; 及 &lt;div class="callout"&gt;）</label>
+        <textarea id="m-rules" style="min-height:110px" placeholder="&lt;h3&gt;基本設置&lt;/h3&gt;&lt;p&gt;...&lt;/p&gt;"></textarea>
+      </div>
+      <div class="fg full"><label>機制卡片（JSON 陣列）</label>
+        <textarea id="m-mechs" style="min-height:75px" placeholder='[{"icon":"🎯","name":"Wild","type":"核心","desc":"說明"}]'></textarea>
+      </div>
+      <div class="fg full"><label>優點（每行一項）</label><textarea id="m-pros" style="min-height:60px" placeholder="Max Win 高&#10;FS 模式多樣"></textarea></div>
+      <div class="fg full"><label>缺點（每行一項）</label><textarea id="m-cons" style="min-height:60px" placeholder="高波動冷場長&#10;RTP 依賭場設定"></textarea></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal()">取消</button>
+      <button class="btn-save" onclick="saveGame()">儲存 ✓</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── PROVIDER CONFIG ──
+const PROV = {
+  'Hacksaw Gaming':{key:'hacksaw',color:'var(--hk)',stripe:'linear-gradient(var(--hk),#ff9a70)',bc:'b-hk',founded:'2017',hq:'Malta',about:'以高波動度、大膽主題著稱。旗下 <strong>OpenRGS</strong> 平台孵化多家小工作室（Bullshark、Backseat Gaming 等）。標誌性風格：黑白底色搭配鮮豔符號、Summoning Symbols 盤面動態擴展。每月約 2~4 款新遊戲。',web:'https://www.hacksawgaming.com'},
+  'NoLimit City':{key:'nolimit',color:'var(--nl)',stripe:'linear-gradient(var(--nl),#a07ee8)',bc:'b-nl',founded:'2013',hq:'Sweden',about:'以爭議性主題與自研 <strong>xWays / xNudge / xSplit</strong> 機制聞名。2022 年被 Evolution 以 €3.4 億收購。代表作：Tombstone 系列（Max Win 500,000x 業界紀錄）。每月約 1~2 款，以極端 Max Win 見長。',web:'https://nolimitcity.com'},
+  'ELK Studios':{key:'elk',color:'var(--elk)',stripe:'linear-gradient(var(--elk),#28e8c0)',bc:'b-elk',founded:'2013',hq:'Stockholm',about:'瑞典獨立廠商，以 <strong>X-iter</strong>（多層 Bonus Buy）、Nitropolis 系列、Cygnus 系列著名。注重品質，每月約 1~2 款，RTP 通常 94%。代表作：Wild Toro（EGR 年度遊戲 2017）。',web:'https://www.elk-studios.com'},
+  "Play'n GO":{key:'playngo',color:'var(--png)',stripe:'linear-gradient(var(--png),#40d870)',bc:'b-png',founded:'2005',hq:'Växjö, Sweden',about:'老牌廠商，350+ 款遊戲。代表作：<strong>Book of Dead</strong>（業界最長壽 Slot）、Reactoonz、Rise of Olympus 系列。每月約 4~5 款，量產能力業界頂尖。',web:'https://www.playngo.com'},
+  'Shady Lady':{key:'shady',color:'var(--sl)',stripe:'linear-gradient(var(--sl),#ff709a)',bc:'b-sl',founded:'2024',hq:'Unknown',about:'2024 年新創廠商，以 <strong>黑色幽默與諷刺社會現象</strong> 為主題。全系列 Max Win <strong>20,000x</strong>，RTP 96%+，高波動度。每兩個月約 1 款，每款都引爆話題。',web:'https://shadylady.io'}
+};
+const CC={'Ways':'cw','Cluster Pays':'cc','Scatter Pays':'cs','Paylines':'cl','Meter Pay':'cm'};
+const BC={'Hacksaw Gaming':'b-hk','NoLimit City':'b-nl','ELK Studios':'b-elk',"Play'n GO":'b-png','Shady Lady':'b-sl'};
+const VC={'Extreme':'ve','High':'vh','Medium-High':'vm','Medium':'vm'};
+
+// ── GAME DATA ──
+let G=[
+{id:1,provider:'Hacksaw Gaming',name:'Dark Spiral',releaseDate:'2026-03-05',conn:'Ways',grid:'6×4',rtp:'96.22',maxwin:'10000',vol:'High',bet:'0.10–100',
+ bwbScore:'8',hitFreq:'25.2%',
+ feat:['Free Spins','Bonus Buy','Cascading','Multiplier','Wilds'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2026/01/Dark-Spiral-slot-1.jpg',
+ img2:'https://www.bigwinboard.com/wp-content/uploads/2026/01/Dark-Spiral-slot-2.jpg',
+ link:'https://www.bigwinboard.com/dark-spiral-hacksaw-gaming-slot-review/',
+ sum:'日式恐怖 Manga 主題。Summoning Symbols 動態擴展盤面至 331,776 Ways。三層 Free Spins（Shattered / Twisted / Tortured）。BWB Score: 8/10',
+ rules:`<h3>基本介紹</h3>
+<p>Dark Spiral is played on a <strong>6×4 grid</strong>, where wins are formed by matching symbols across three or more adjacent reels, starting from the far left. The game's <strong>Summoning symbols</strong> can stack additional symbols onto the reels, dramatically expanding the win potential — from <strong>4,096 ways</strong> to win up to a maximum of <strong>331,776</strong>. The volatility is firmly on the <strong>high</strong> end, while the RTP sits at <strong>96.22%</strong> (the best of the four available settings) across a betting range of <strong>$/€0.10 to $/€100</strong> per spin.</p>
+<p>On the lower side of the paytable are 10–A playing card ranks awarding <strong>0.5x the bet</strong> for a 6 OAK winning way. High pays award <strong>1x to 3x the bet</strong> for a 6-of-a-kind win. Wilds hit on all reels, substituting all paying symbols and worth <strong>5x</strong> for 5 OAK. A <strong>cascade mechanic</strong> removes winning symbols before filling the grid with a symbol drop, repeating as long as new wins appear.</p>
+<h3>召喚圖示</h3>
+<p>Summoning symbols can be <strong>1×2 to 1×4 in size</strong> and land on all reels <strong>except the leftmost reel</strong>. When they land, they reveal a stack of matching symbols or wilds: a 1×2 reveals <strong>3–6 symbols</strong>, a 1×3 reveals <strong>5–9 symbols</strong>, and a 1×4 reveals <strong>6–12 symbols</strong>. If a wild lands directly above or below a Summoning symbol on the same reel, the Summoning symbol <strong>increases in size</strong> by expanding to cover the wild. When Summoning symbols are part of a win, they <strong>remain on the reel</strong> while other winning symbols cascade, revealing a new symbol each time.</p>
+<h3>免費旋轉</h3>
+<p><strong>Shattered Bonus</strong> — Triggered by landing <strong>3 scatters</strong>. Awards 10 free spins with increased Summoning symbol frequency. Landing 2 or 3 scatters during the bonus awards +2 or +3 extra spins.</p>
+<p><strong>Twisted Bonus</strong> — Triggered by landing <strong>4 scatters</strong>. Awards 10 free spins with all Shattered mechanics, plus all Summoning symbols that land become <strong>sticky</strong> for the remainder of the round, revealing new symbols on every spin.</p>
+<p><strong>Tortured Hidden Epic Bonus</strong> — Triggered by landing <strong>5 scatters</strong>. Plays like Twisted but the <strong>first spin is guaranteed to have 2 Summoning symbols</strong> on the grid.</p>
+<h3>直購特色</h3>
+<p><strong>BonusHunt FeatureSpins (3×)</strong> — Each spin is 5× more likely to activate a bonus round.</p>
+<p><strong>Summon the FeatureSpins (100×)</strong> — Each spin guarantees at least 2 Summoning symbols land.</p>
+<p><strong>Shattered (100×)</strong> — Directly enter the Shattered bonus.</p>
+<p><strong>Twisted (200×)</strong> — Directly enter the Twisted bonus, with the chance to trigger Tortured within it.</p>`,
+ mechs:[
+  {icon:'🌀',name:'Summoning Symbols',type:'核心機制',desc:'1×2 至 1×4 高大符號，展開揭示 3–12 個匹配符號，動態擴展盤面贏線數。Wild 鄰接可再升一級。'},
+  {icon:'⛓️',name:'Sticky Summoning（Twisted 限定）',type:'Bonus 機制',desc:'Twisted FS 中 Summoning Symbols 全部黏著留場，每轉重新揭示符號。'},
+  {icon:'💀',name:'Tortured — Hidden Epic Bonus',type:'隱藏 Bonus',desc:'5 Scatter 觸發，第一轉保證 2 個 Summoning Symbols 預置。'},
+  {icon:'💥',name:'Cascading Reels',type:'基礎機制',desc:'贏線消除後符號落下補位，持續直到無新贏線。'}
+ ],
+ pros:['獨特恐怖主題視覺震撼','Twisted Sticky FS 爆發潛力','三層 Bonus 系統天花板感清晰','BWB Score 8/10'],
+ cons:['Max Win 10,000x 偏低','Tortured 自然觸發率極低','高波動冷場期長'],
+ rtps:[{label:'最高',val:96.22},{label:'進階',val:94.22},{label:'一般',val:92.32},{label:'最低',val:86.24}]
+},
+{id:2,provider:'NoLimit City',name:'Catfish Hunters',releaseDate:'2026-03-17',conn:'Ways',grid:'5×3',rtp:'96.03',maxwin:'20000',vol:'High',bet:'0.20–100',
+ bwbScore:'N/A',hitFreq:'30.41%',
+ feat:['Free Spins','Bonus Buy','Multiplier','Wilds'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2026/02/Catfish-Hunters-slot-1.jpg',
+ img2:'https://www.bigwinboard.com/wp-content/uploads/2026/01/Catfish-Hunters-slot-feat.jpg',
+ link:'https://www.bigwinboard.com/catfish-hunters-nolimit-city-slot-review/',
+ sum:'美國南方釣魚主題，5×3 盤面 243 Ways。5 種 Impostor Wild 角色（Stacy/Karen/Granny/Cletus/Bubba），Electrical Frames + Fish Multiplier（最高 ×1,024），xWays，三種 FS 模式（Dark/Deep/Overcharged Water Spins）。Hit Freq 30.41%，FS 觸發率 1 in 200。Max Win 20,000×。',
+ rules:`<h3>Slot Overview（來源：BWB + SlotCatalog + Nolimit City 官方）</h3>
+<p>Catfish Hunters 是一款 <strong>5×3 盤面，243 Ways to Win</strong> 的老虎機。設置在美國密西西比河岸，主角包括 Stacy、Karen、Granny、Cletus、Bubba 五位特色角色。數學模型為<strong>極高波動</strong>，預設 RTP <strong>96.03%</strong>（另有 94.03% / 92.06% 版本）。下注範圍 <strong>$/€0.20–€100</strong>。Hit Rate <strong>30.41%</strong>，FS 觸發率約 <strong>1 in 200</strong> 轉。Max Win <strong>20,000×</strong>。</p>
+<h3>Fish Symbols & Electrical Frames ★ 核心機制</h3>
+<p>每局開始，盤面隨機位置出現一個或多個 <strong>Electrical Frame（電光框）</strong>。當 Fish 圖示落在框內，立即結算該 Fish 的當前價值（<strong>0.25×、0.5×、1×、2×、5×、10×、20× 或 100×</strong> 下注額）。每次 Fish win 結算後，盤面上所有剩餘 Fish 的價值<strong>翻倍</strong>。右側的 <strong>Global Fish Multiplier</strong> 計量器記錄累積翻倍次數，上限為 <strong>×1,024</strong>。</p>
+<h3>Impostor Wilds（5 種角色）</h3>
+<p>Impostor Wild 以神秘角色形象落地，隨機變為以下五種之一，各有獨特效果：</p>
+<p><strong>Stacy Wild</strong> — Global Fish Multiplier 隨機 ×2、×4 或 ×8。</p>
+<p><strong>Karen Wild</strong> — 在自身及所有相鄰格位添加 Electrical Frame。</p>
+<p><strong>Granny Wild</strong> — 在所有盤面格位添加 Electrical Frame（最強單一觸發）。</p>
+<p><strong>Cletus Wild</strong> — 將所有贏線一般圖示轉為隨機 Fish 圖示。</p>
+<p><strong>Bubba Wild</strong> — 將所有一般圖示轉為隨機 Fish 圖示。</p>
+<h3>xWays 展開圖示</h3>
+<p>xWays 圖示落地後揭示 2–4 個相同一般圖示、或單個 Wild/Fish 圖示。多個 xWays 同時落地時，全部揭示<strong>相同圖示</strong>類型，最大化 Ways 數量。</p>
+<h3>Free Spins — 三種模式</h3>
+<p><strong>Dark Water Spins（3 Bonus）</strong> — 8 次 FS，每多 1 個 Scatter +1 轉。隨機獲得 1 種升級：Upgraded Bonus（+2轉/Scatter）、Upgraded xWays（xWays 只揭示 Fish 或 Impostor Wild）、+1 Sticky Electrical Frame（中心位置）。Base Game 累積的 Fish Multiplier 帶入 Bonus，但每轉無 Fish win 時減半（下限 ×1）。</p>
+<p><strong>Deep Water Spins（4 Bonus）</strong> — 10 次 FS，開局即獲得 2 種升級。</p>
+<p><strong>Overcharged Spins（5 Bonus）</strong> — 12 次 FS，開局全部 3 種升級同時啟動，是理論上限模式。</p>
+<h3>額外旋轉 & Nolimit 加碼選項</h3>
+<p>Bonus 結束後可能提供一次 <strong>Extra Spin</strong>（保留上輪 Frame 和 Multiplier），費用不超過本輪總贏額。Boosters 包括：<strong>Bonus Booster (3×)</strong>、<strong>Grand Catch (90×)</strong>（保證 1 Impostor Wild，Fish 值限 10×/20×/100×）、<strong>Lucky Draw (235×)</strong>（隨機觸發某種 Bonus）、<strong>Legend Catch (2,000×)</strong>（保證 2 Impostor Wild，所有 Fish 值為 100×）。</p>`,
+ mechs:[
+  {icon:'⚡',name:'Electrical Frames + Fish Multiplier',type:'核心機制',desc:'每轉隨機 Frame，Fish 落框結算值。每次 Fish win 後剩餘 Fish 值翻倍，Global Multiplier 最高 ×1,024，FS 期間帶入但每轉無 Fish 時減半。'},
+  {icon:'🎭',name:'5 種 Impostor Wilds',type:'角色系統',desc:'Stacy（Multiplier ×2/4/8）、Karen（周圍加 Frame）、Granny（全盤加 Frame）、Cletus（贏線符號→Fish）、Bubba（所有圖示→Fish）。'},
+  {icon:'🌿',name:'xWays',type:'展開機制',desc:'揭示 2–4 個相同圖示或 1 個 Wild/Fish，多個同時落地全揭示同類型，最大化 Ways。'},
+  {icon:'🎣',name:'三層 FS（Dark/Deep/Overcharged）',type:'Bonus 系統',desc:'3/4/5 Scatter 分別觸發 8/10/12 轉，逐層解鎖 1/2/3 個升級（Upgraded Bonus / xWays / +Frame）。Legend Catch (2000×) 是最高購買選項。'}
+],
+ pros:['Fish Multiplier 最高 ×1,024 爆發潛力','5 種 Impostor Wild 角色有趣且差異化','30.41% 高 Hit Rate，FS 1 in 200 觸發率友好','三層 FS 天花板分明','Granny Wild 全盤加 Frame 是最佳單轉時刻'],
+ cons:['BWB 尚未正式評測（太新）','FS 內 Multiplier 每轉無 Fish 就減半，波動大','Max Win 20,000× 相對保守','下注上限 €100 但 Legend Catch 需 2,000×'],
+ rtps:[{label:'最高',val:96.03},{label:'進階',val:94.03},{label:'標準',val:92.06}]
+},
+{id:3,provider:'NoLimit City',name:'Tombstone Slaughter',releaseDate:'2026-01-28',conn:'Ways',grid:'6×2-3',rtp:'96.01',maxwin:'500000',vol:'Extreme',bet:'0.10–100',
+ bwbScore:'10',hitFreq:'—',
+ feat:['Free Spins','Bonus Buy','Multiplier','Wilds','xNudge'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2024/10/Tombstone-Slaughter-El-Gordos-Revenge-slot-1.jpg',
+ img2:'',
+ link:'https://www.bigwinboard.com/tombstone-slaughter-el-gordos-revenge-nolimit-city-slot-review/',
+ sum:'Tombstone 系列終章。業界史上最高 Max Win 500,000×。xNudge Wilds + xRIP + Slaughter Spins + Massacre Spins。BWB Score: 10/10',
+ rules:`<h3>基本介紹</h3>
+<p>遊戲設有 <strong>6 輪</strong>，圖示位置排列為 <strong>2-3-3-3-3-2</strong>。預設 <strong>324 條贏分方式</strong>，可透過各項機制擴展。最高 RTP <strong>96.01%</strong>，押注範圍 <strong>$/€0.10–€100</strong>。最右列僅出現高疊 Revolver（左輪）或角色圖示，不出現低值圖示，若出現半疊圖示則該列停用。</p>
+<h3>xNudge 百搭圖示</h3>
+<p><strong>堆疊式百搭圖示</strong>，落地時自動 Nudge（滑入）直至完整覆蓋整列。<strong>每 Nudge 一格，百搭加成倍數 +1</strong>。畫面中有多個 xNudge 百搭時，各自的加成倍數<strong>相乘</strong>計算。此圖示僅出現在中間四列。</p>
+<h3>xRIP 贏分吞噬</h3>
+<p>一般遊戲或 Bonus Game 中，若該轉<strong>總贏分低於押注額，觸發 xRIP</strong>——該轉<strong>贏分歸零</strong>，不計任何彩金。</p>
+<h3>快拔特效（Quick Draw Features）</h3>
+<p>隨機觸發特效，包含 <strong>Boothill 加成倍數</strong>（最高 ×999）及<strong>決鬥百搭圖示</strong>（Shootout Wilds）等。</p>
+<h3>屠殺旋轉（Slaughter Spins）</h3>
+<p>出現 <strong>3 個 Slaughter 分散圖示</strong>觸發，獲得 <strong>5 次屠殺旋轉</strong>。最右列每轉保證落下完整角色圖示，附帶 <strong>×5 至 ×99</strong> 的隨機加成倍數，或出現 Revolver 圖示。El Gordo 復仇計量器逐步推進至 5 級，每級提升加成倍數。</p>
+<h3>大屠殺旋轉（Massacre Spins）</h3>
+<p>屠殺旋轉中，完整 Revolver 落地後，剩餘旋轉<strong>升級為大屠殺旋轉</strong>，最右列固定一個鎖定（黏性）Revolver 圖示。加成倍數最高可達 <strong>×999</strong>，推動遊戲贏分上限達到 <strong>500,000×</strong>。</p>
+<h3>El Gordo 復仇計量器</h3>
+<p>位於轉輪下方，從第 1 級推進至第 5 級。出現 4 個分散圖示時，進入時已填入 2 格；出現 5 個分散圖示時可獲最大優勢。擊殺數加成倍數（Killcount Multiplier）可為後續各級額外追加 +1 至 +89 的加成倍數。</p>`,
+ mechs:[
+  {icon:'🤠',name:'xNudge Wilds',type:'系列招牌',desc:'堆疊 Wild 自動 Nudge 覆蓋整列，每 Nudge 一格 +1 乘數，多個相乘。'},
+  {icon:'☠️',name:'xRIP',type:'全新機制',desc:'贏額低於下注額時觸發，直接沒收該轉贏額，極端波動的核心。'},
+  {icon:'🔫',name:'Slaughter / Massacre Spins',type:'Bonus 系統',desc:'三至五個 Scatter 觸發 Slaughter，Revolver 升級為 Massacre，乘數最高 ×999。'},
+  {icon:'📊',name:'El Gordo\'s Revenge Meter',type:'進度機制',desc:'5 層進度計量，每層提升乘數，達到最高層是 500,000× 的關鍵路徑。'}
+ ],
+ pros:['業界史上最高 Max Win 500,000×','BWB Score 10/10','xNudge + Massacre 複合機制','Nolimit City 系列終章'],
+ cons:['極端波動，xRIP 頻繁','500,000× 機率 1/189,000,000','非一般玩家首選'],
+ rtps:[{label:'最高',val:96.01},{label:'進階',val:94.01},{label:'標準',val:92.01}]
+},
+{id:4,provider:'ELK Studios',name:'Ryze 2',releaseDate:'2026-03-03',conn:'Cluster Pays',grid:'5–6×7',rtp:'94.00',maxwin:'10000',vol:'High',bet:'0.20–100',
+ bwbScore:'8',hitFreq:'—',
+ feat:['Free Spins','Bonus Buy','Cascading','Multiplier','Wilds','X-iter'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2026/01/Ryze-2-slot-a.jpg',
+ img2:'https://www.bigwinboard.com/wp-content/uploads/2026/01/Ryze-2-slot-b.jpg',
+ link:'https://www.bigwinboard.com/ryze-2-elk-studios-slot-review/',
+ sum:'龍守黃金主題。動態 5–6 列不對稱盤面，Cluster Pays + Avalanche，全新 Orb Overload 六球爆發機制。BWB Score: 8/10',
+ rules:`<h3>基本介紹</h3>
+<p>圖示落入 <strong>7 行、5 至 6 列</strong>的主盤面，盤面結構不對齊，圖示在<strong>連爆消除</strong>時會斜向左右落下。此遊戲採用<strong>群組贏分</strong>機制，至少 <strong>5 個相連的相同圖示</strong>才能組成贏分。<strong>高度波動</strong>，押注範圍 <strong>$/€0.20–€100</strong>，理論 RTP <strong>94%</strong>。</p>
+<p>遊戲共 7 種支付圖示：青銅幣、銀幣、金幣，以及藍、綠、紫、紅寶石。最大群組 15 個以上，賠率 <strong>1.5× 至 10×</strong> 押注額。</p>
+<h3>連爆消除 & 加成倍數百搭</h3>
+<p>贏分圖示全數消除後，剩餘圖示落下填補空位，不斷重複直到無新贏分。每次支付圖示組成贏分後，空出的格位中會生成一個 <strong>×1 加成倍數百搭</strong>。後續贏分中，每個金幣或支付圖示參與贏線，加成倍數百搭的數值 <strong>+1</strong>。同一次贏分中若有多個加成倍數百搭，數值<strong>累加合計</strong>後一起計算。</p>
+<h3>金幣 & 爆破圖示</h3>
+<p>金幣帶有固定倍數獎值。群組金幣贏分結算後，其總值轉移至一個留在空格中的新金幣。<strong>爆破圖示</strong>落地時，將自身及相鄰的支付圖示全部轉換為相同圖示或金幣。若爆破圖示啟動位置旁有待機中的寶珠，則同時<strong>充能</strong>該寶珠。</p>
+<h3>寶珠超載（Orb Overload）</h3>
+<p>贏分群組與待機寶珠相鄰時，即可<strong>啟動</strong>該寶珠。若同一轉內所有 <strong>6 個寶珠</strong>全部被充能，本轉結束時觸發<strong>寶珠超載</strong>。各寶珠依序啟動，各自觸發一種隨機效果：生成金幣、圖示升值、生成爆破圖示、生成百搭、強化百搭倍數，或生成高階百搭。</p>
+<h3>Bonus Game & X-iter 直購</h3>
+<p>分散圖示滑入底列時，觸發 <strong>7 次免費旋轉</strong>，期間加成倍數百搭在各轉之間<strong>鎖定（黏性）</strong>保留。X-iter 直購選項範圍 <strong>2× 至 500×</strong> 押注額。</p>`,
+ mechs:[
+  {icon:'🐉',name:'Multiplier Wilds',type:'主要爆發源',desc:'贏線後生成，每個 Coin/符號在贏線中 +1 乘數，多個 Wild 合計相加。'},
+  {icon:'🔮',name:'Orb Overload',type:'全新機制',desc:'一輪啟動全部 6 Orb 後觸發，6 種隨機效果疊加爆炸。'},
+  {icon:'🪙',name:'Coin + Burst Symbol',type:'輔助機制',desc:'Coin 保留在空格中，Burst 觸發相鄰圖示轉換，配合 Orb 啟動。'},
+  {icon:'⚡',name:'X-iter 四層購入',type:'Bonus Buy',desc:'2× 到 500× 的 X-iter 選單，可直接進入 Bonus 或保證 Orb Overload。'}
+ ],
+ pros:['Orb Overload 創新機制','不對稱斜向盤面視覺獨特','X-iter 彈性分層','BWB Score 8/10'],
+ cons:['RTP 94% 低於業界均值','Max Win 10,000× 偏低','高波動冷場明顯'],
+ rtps:[{label:'標準',val:94.00}]
+},
+{id:5,provider:'ELK Studios',name:"Bonzo's Bananza",releaseDate:'2026-02-24',conn:'Ways',grid:'5×5',rtp:'94.00',maxwin:'10000',vol:'High',bet:'0.20–100',
+ bwbScore:'8',hitFreq:'—',
+ feat:['Free Spins','Bonus Buy','Multiplier','Wilds','X-iter'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2025/11/Bonzos-Bananza-slot-1.jpg',
+ img2:'https://www.bigwinboard.com/wp-content/uploads/2025/11/Bonzos-Bananza-slot-2.jpg',
+ link:'https://www.bigwinboard.com/bonzos-bananza-elk-studios-slot-review/',
+ sum:"南美叢林猴子主題。259 Ways，Stacked Nudging Monkey Wilds + Sticky Banana Wilds + Respins。X-iter 多層購入。BWB Score: 8/10",
+ rules:`<h3>基本介紹</h3>
+<p>Bonzo's Bananza 採用 <strong>5×5 主盤面，共 259 條贏分方式</strong>。<strong>高度波動</strong>，RTP <strong>94%</strong>，押注範圍 <strong>$/€0.20–€100</strong>。共 7 種支付圖示：撲克牌面 Q–A、奇異果、橘子、西瓜及小鳥。5 連賠率 <strong>0.25× 至 5×</strong> 押注額。</p>
+<h3>百搭圖示</h3>
+<p><strong>猴子百搭</strong>與<strong>香蕉百搭</strong>均可替換除分散圖示以外的所有圖示。<strong>猴子百搭為全高堆疊圖示</strong>，落地時自動 Nudge 滑入覆蓋整列，靜止後賦予一個<strong>隨機加成倍數</strong>，並觸發<strong>重新旋轉</strong>（猴子百搭在重新旋轉期間鎖定保留）。兩個猴子百搭同時落地時，重新旋轉依序執行。<strong>香蕉百搭</strong>為 2 格高圖示，無加成倍數，向上或向下 Nudge 並觸發重新旋轉，直到滑出盤面為止。香蕉百搭可<strong>隨機與猴子百搭連動</strong>，每次 Nudge 提升猴子百搭的加成倍數。</p>
+<h3>免費旋轉</h3>
+<p>出現 <strong>3 個以上分散圖示</strong>觸發 <strong>5 次免費旋轉</strong>。出現 4 個分散圖示時，第一轉保證出現猴子圖示；出現 5 個分散圖示時，第一轉保證出現 <strong>2 個猴子百搭</strong>。免費旋轉中所有落地的猴子百搭均為<strong>鎖定（黏性）</strong>，保留至本輪結束。</p>
+<h3>X-iter 直購特色</h3>
+<p><strong>特色搜尋（2×）</strong> — 本轉觸發 Bonus Game機率提升 3 倍。</p>
+<p><strong>猴子百搭（10×）</strong> — 保證出現 1 個猴子百搭圖示。</p>
+<p><strong>猴子百搭狂歡（25×）</strong> — 保證出現 2 個猴子百搭。</p>
+<p><strong>直購免費旋轉（100×）</strong> — 直接進入由 3 個以上分散圖示觸發的免費旋轉。</p>
+<p><strong>超級特色（500×）</strong> — 由 5 個分散圖示觸發的超級特色，第一轉保證有 2 個猴子百搭。</p>`,
+ mechs:[
+  {icon:'🐒',name:'Stacked Nudging Monkey Wild',type:'核心機制',desc:'全高堆疊 Wild，Nudge 滑入後賦予隨機乘數，是主要爆發來源。'},
+  {icon:'🍌',name:'Sticky Banana Wild + Respin',type:'輔助機制',desc:'黏著留場觸發 Respin，與 Monkey Wild 連動提升乘數。'},
+  {icon:'⭐',name:'X-iter 五層購入',type:'Bonus Buy',desc:'2× 至 500× 五層選項，最高直購含 2 Monkey Wilds 的 Super Bonus。'}
+ ],
+ pros:['機制簡潔易懂','Monkey Wild 乘數爆發感強','BWB Score 8/10','Super Bonus 開局刺激'],
+ cons:['Max Win 10,000× 偏低','比 ELK 其他作品機制較少','RTP 94%'],
+ rtps:[{label:'標準',val:94.00}]
+},
+{id:6,provider:'ELK Studios',name:'Cygnus 6',releaseDate:'2026-01-20',conn:'Ways',grid:'6×4→8',rtp:'94.00',maxwin:'50000',vol:'High',bet:'0.20–100',
+ bwbScore:'8',hitFreq:'—',
+ feat:['Free Spins','Bonus Buy','Multiplier','Wilds','X-iter'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2025/11/Cygnus-6-slot-a.jpg',
+ img2:'https://www.bigwinboard.com/wp-content/uploads/2025/11/Cygnus-6-slot-b.jpg',
+ link:'https://www.bigwinboard.com/cygnus-6-elk-studios-slot-review/',
+ sum:'馬丘比丘天鵝座主題。Avalanche 盤面從 4,096 Ways 擴展至 262,144。四星座進度系統 + Cygnus Realm 超大盤面。Max Win 50,000×。BWB Score: 8/10',
+ rules:`<h3>基本介紹</h3>
+<p>一般遊戲在 <strong>6×4 主盤面</strong>進行，共 <strong>4,096 條贏分方式</strong>。贏分圖示消除後，剩餘圖示向下落，頂部<strong>新增一行</strong>並補入圖示，形成<strong>連爆消除</strong>，直到無新贏分。盤面最高擴展至 <strong>8 行，共 262,144 條贏分方式</strong>。押注範圍 <strong>$/€0.20–€100</strong>，高度波動，RTP <strong>94%</strong>。</p>
+<h3>星座進度系統</h3>
+<p>遊戲從<strong>第 1 個星座</strong>（蝴蝶，含 3 顆星）開始。每顆星有三種狀態：待機、啟動、消耗。贏分圖示出現在星的正前方時，該星變為<strong>啟動</strong>；參與星光特效後變為<strong>消耗</strong>。觸發星光特效、天鵝座領域或 Bonus Game 後，進度<strong>推進至下一個星座</strong>。進度依<strong>每個押注等級獨立儲存</strong>。</p>
+<h3>特殊圖示</h3>
+<p><strong>星星充電圖示</strong> — 落地後啟動當前星座中 1–3 顆星，隨後轉換為百搭圖示。<strong>加成倍數圖示</strong> — 將當前有效加成倍數 +1。<strong>贏分上限圖示</strong> — 若滑至最左列，直接補足達到贏分上限所需的差額。</p>
+<h3>星光特效（Starlight）</h3>
+<p>連爆消除結束後，若當前星座有 2 顆以上星處於啟動狀態，觸發星光特效。將所有星座連線上的圖示<strong>全部轉換</strong>為相同的支付圖示或百搭圖示。</p>
+<h3>天鵝座領域（Cygnus Realm）</h3>
+<p>當前星座所有星星全部啟動或消耗後觸發。在 <strong>6×8 超大盤面</strong>進行，獲得 3 次旋轉機會。神秘圖示為鎖定（黏性）狀態，阻擋圖示（Blocker）每轉落出。在此期間，分散圖示落地可觸發<strong>Bonus Game（7 次 Free Game）</strong>。</p>
+<h3>X-iter 直購</h3>
+<p>特色搜尋（2×）、星星充電（10×）、直購特色（100×）、天鵝座領域（200×）、超級特色（500×）。</p>`,
+ mechs:[
+  {icon:'⭐',name:'Star Constellation 進度系統',type:'核心進度',desc:'4 星座 × 3 星逐步積累，進度各下注等級保存，解鎖 Starlight / Realm / Bonus。'},
+  {icon:'🌌',name:'Cygnus Realm',type:'超大盤面',desc:'6×8 盤面 262,144 Ways，神秘圖示黏著最終轉換，攜帶全域 Multiplier。'},
+  {icon:'✨',name:'Starlight',type:'瞬時爆發',desc:'Active 星前方符號全轉神秘，評估後統一變最高值圖示。'},
+  {icon:'📐',name:'Avalanche 盤面擴展',type:'基礎物理',desc:'連鎖消除每次添加一行，4 行擴展到 8 行，Ways 從 4,096 升至 262,144。'}
+ ],
+ pros:['Max Win 50,000× ELK 最高','星座進度策略深度感','Cygnus Realm 超大盤面震撼','BWB Score 8/10'],
+ cons:['規則最複雜學習成本高','RTP 94%','Realm 觸發需積累進度'],
+ rtps:[{label:'標準',val:94.00}]
+},
+{id:7,provider:"Play'n GO",name:'Wheel of Mictlan',releaseDate:'2026-03-19',conn:'Paylines',grid:'5×3',rtp:'96.00',maxwin:'40000',vol:'High',bet:'0.05–100',
+ bwbScore:'6',hitFreq:'1 in 3.89',
+ feat:['Free Spins','Wilds'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2026/01/Wheel-of-Mictlan-slot-1.jpg',
+ img2:'https://www.bigwinboard.com/wp-content/uploads/2026/01/Wheel-of-Mictlan-slot-2.jpg',
+ link:'https://www.bigwinboard.com/wheel-of-mictlan-playn-go-slot-review/',
+ sum:'阿茲特克冥界主題。5×3 盤面 10 條賠線，Wild Flip + Bonus Wheel（含 Cashpot 5,000×）+ Free Spins 最多 140 輪。Max Win 40,000×。BWB Score: 6/10',
+ rules:`<h3>基本介紹</h3>
+<p>Wheel of Mictlan 在 <strong>5×3 主盤面，共 10 條賠線</strong>進行，押注範圍 <strong>$/€0.05–€100</strong>，高度波動，最高 RTP 約 <strong>96%</strong>。賠率表含阿茲特克風格撲克牌面 10–A 及四種面具圖示。5 連牌面賠 <strong>4× 至 6×</strong>，高值圖示賠 <strong>10× 至 30×</strong>，5 個翻轉百搭連線賠 <strong>40×</strong>。</p>
+<h3>百搭翻轉（Wild Flip）</h3>
+<p>同一轉出現 <strong>2 個以上翻轉百搭</strong>時觸發百搭翻轉特效，每個翻轉百搭各有 <strong>50% 機率</strong>升級為<strong>全列堆疊百搭</strong>。翻轉百搭可替換除分散圖示及特色圖示以外的所有圖示。</p>
+<h3>命運輪盤（Bonus Wheel）</h3>
+<p>每個特色圖示落地時有機率觸發命運輪盤；出現 <strong>3 個特色圖示保證觸發</strong>。輪盤隨機派發以下四種獎勵之一：</p>
+<p><strong>加成倍數</strong> — 本轉所有贏分乘以 ×2 至 ×100。</p>
+<p><strong>即時彩金</strong> — 直接派發 8× 至 200× 押注額。</p>
+<p><strong>免費旋轉</strong> — 派發 5 至 20 次免費旋轉。</p>
+<p><strong>彩金池（Cashpot）</strong> — 進入配對小遊戲，獎勵 1,000×、2,500× 或最高 <strong>5,000×</strong> 押注額。</p>
+<h3>免費旋轉</h3>
+<p>出現 <strong>3 個金字塔分散圖示</strong>觸發或再觸發 <strong>10 次免費旋轉</strong>。免費旋轉期間，百搭翻轉<strong>只需 1 個翻轉百搭</strong>即可觸發（一般遊戲需 2 個）。命運輪盤在免費旋轉期間仍可觸發。本遊戲最多可累積 <strong>140 次</strong>免費旋轉。</p>`,
+ mechs:[
+  {icon:'🎡',name:'Bonus Wheel',type:'核心機制',desc:'3 Bonus Symbols 保證觸發輪盤，可得 ×2–100 乘數、5–20 FS、即時獎金或 Cashpot 最高 5,000×。'},
+  {icon:'🃏',name:'Wild Flip',type:'Wild 機制',desc:'2+ Flip Wild 落地觸發，每個有 50% 機率變全列堆疊 Wild；FS 中只需 1 個。'},
+  {icon:'🏺',name:'Cashpot',type:'特殊獎勵',desc:'Bonus Wheel 中觸發，配對小遊戲獎勵 1,000× / 2,500× / 5,000×。'}
+ ],
+ pros:['Max Win 40,000×','Cashpot 5,000× 小遊戲','最多 140 輪 Free Spins'],
+ cons:['BWB Score 僅 6/10','主題視覺平庸','Wild Flip 50% 機率不穩定','10 Paylines 偏少'],
+ rtps:[{label:'標準',val:96.00}]
+},
+{id:8,provider:"Play'n GO",name:'Rise of Olympus 1000',releaseDate:'2025-12-11',conn:'Scatter Pays',grid:'6×5',rtp:'96.24',maxwin:'60000',vol:'High',bet:'0.10–50',
+ bwbScore:'7',hitFreq:'—',
+ feat:['Free Spins','Multiplier','Cascading'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2025/11/rise-of-olympus-1000-slot-img-a.jpg',
+ img2:'https://www.bigwinboard.com/wp-content/uploads/2025/11/rise-of-olympus-1000-slot-img-b.jpg',
+ link:'https://www.bigwinboard.com/rise-of-olympus-1000-playn-go-slot-review/',
+ sum:'Rise of Olympus 系列終章，捨棄 Hand of God 全面換血。6×5 Scatter Pays，1,000× 累積 Multiplier（FS 不重置），Go Ultra +50% 賭注強化。Max Win 60,000×。BWB Score: 7/10',
+ rules:`<h3>基本介紹</h3>
+<p>Rise of Olympus 1000 採用 <strong>6×5 主盤面</strong>及<strong>分散贏分</strong>機制——任意位置出現 <strong>8 個以上相同圖示</strong>即可贏分。贏分圖示消失後，圖示向下連爆補位。<strong>高度波動</strong>，共 5 種 RTP 設定，預設最高為 <strong>96.24%</strong>，押注範圍 <strong>$/€0.10–€50</strong>，並提供選用的<strong>加碼押注（Go Ultra）</strong>。</p>
+<p>三位神祇為最高值圖示，其次為頭盔、三叉戟、閃電，最低值為四種寶石。8 連賠率 <strong>0.1× 至 0.8×</strong>，12 連以上賠率 <strong>0.9× 至 9×</strong> 押注額。此遊戲<strong>無百搭圖示</strong>。</p>
+<h3>加成倍數</h3>
+<p>加成倍數共 <strong>15 個等級</strong>，數值從 <strong>×2 至 ×1,000</strong>。加成倍數在本轉結束時<strong>合計後</strong>乘以總贏分。場上有多個加成倍數時，數值全部<strong>相加</strong>再計算，合計最高可達 <strong>×3,013</strong>。加成倍數首次升級時提升 +1 等級；升級過一次後，後續連爆有機會觸發<strong>超級升級</strong>，隨機跳升數個等級至 ×1,000。</p>
+<h3>免費旋轉</h3>
+<p>出現 <strong>3 個以上分散圖示</strong>觸發 <strong>12 次免費旋轉</strong>。免費旋轉期間加成倍數<strong>持續累積不重置</strong>——參與贏分的加成倍數保留至最後一轉，所有加成倍數總和直接乘以全場贏分。免費旋轉最多累積 <strong>36 次</strong>。</p>
+<h3>Go Ultra 加碼押注</h3>
+<p>押注額<strong>增加 50%</strong>的加碼功能。開啟後，一般遊戲中只要該轉有贏分，落地的加成倍數<strong>保證升級 +1 等級</strong>。開啟 Go Ultra 時，每轉加成倍數合計最高可達 <strong>×3,054</strong>。</p>`,
+ mechs:[
+  {icon:'⚡',name:'Cumulative Multiplier（FS 不重置）',type:'核心機制',desc:'FS 期間所有乘數累積相加，最高 ×3,013，配合 Super Upgrade 爆炸性提升。'},
+  {icon:'🔱',name:'Super Upgrade',type:'乘數升級',desc:'乘數升級後再次 Cascade 有機率觸發，隨機提升至更高階，可達 ×1,000 上限。'},
+  {icon:'✨',name:'Go Ultra（+50% 賭注）',type:'強化模式',desc:'增加 50% 賭注後，贏局中所有乘數保證 +1 升級，總乘數上限提至 ×3,054。'}
+ ],
+ pros:['Max Win 60,000× 系列最高','BWB Score 7/10','×1,000 不重置 Multiplier','Go Ultra 強化機制'],
+ cons:['BWB 認為設計安全保守','無 Wild 圖示需適應','Scatter Pays 與前作差異大','下注上限僅 €50'],
+ rtps:[{label:'最高',val:96.24},{label:'進階',val:94.24},{label:'一般',val:91.24},{label:'最低',val:84.24}]
+},
+{id:9,provider:'Shady Lady',name:'Truth',releaseDate:'2026-03-26',conn:'Paylines',grid:'5×5',rtp:'96.10',maxwin:'20000',vol:'High',bet:'0.10–50',
+ bwbScore:'9',hitFreq:'—',
+ feat:['Free Spins','Bonus Buy','Multiplier','Wilds'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2025/11/Truth-slot-1.jpg',
+ img2:'',
+ link:'https://www.bigwinboard.com/truth-shady-lady-slot-review/',
+ sum:'陰謀論諷刺主題。5×5 盤面 15 Paylines，RTP 96.1%，高 Wild 賠率 50×。4 種隨機 Conspiracy Features（Birds Aren\'t Real / 5G Transmission / Reptilians / Simulation）+ Bonus / Super Bonus + The Store。BWB Score: 9/10',
+ rules:`<h3>Slot Overview（來源：BWB + SlotCatalog + iGamingToday）</h3>
+<p>Truth 是一款<strong>陰謀論諷刺</strong>主題老虎機，玩家置身於一個塞滿機密文件的昏暗辦公室。盤面為 <strong>5×5，15 條固定 Paylines</strong>，下注範圍 <strong>$/€0.10–€50</strong>，RTP <strong>96.1%</strong>，高波動。Max Win <strong>20,000×</strong>。</p>
+<p><strong>圖示說明：</strong>低值圖示為金字塔、腳掌、噴射燃料筒、文件夾（5 OAK 賠 1×–3×）；高值 5 個角色圖示（5 OAK 賠 7.5×–50×）；Wild 可在所有列出現，替換所有一般圖示，5 OAK 賠 <strong>50×</strong>。</p>
+<h3>4 種隨機 Conspiracy Features</h3>
+<p>每輪 Base Game 可能隨機觸發以下其中一種：</p>
+<p><strong>Birds Aren't Real（鳥類不是真的）</strong> — 無人機鳥群飛過盤面，隨機位置落下並「故障墜毀」，留下 Wild 圖示。</p>
+<p><strong>5G Transmission（5G 傳播）</strong> — 盤面出現攜帶 ×2–×5 乘數的 5G Wild，每轉可隨機複製自身到空格或將乘數傳送給鄰近 Wild，直到無法啟動為止。</p>
+<p><strong>The Reptilians Are Everywhere（爬蟲人無處不在）</strong> — 隨機選擇一種角色圖示（M1–M4），嘗試將所有相同圖示全部轉換為最高值角色（Reptilian H1）。</p>
+<p><strong>It's All a Simulation（這一切都是模擬）</strong> — 重新模擬當前盤面，套用更有利的圖示分布，可能直接升級為更大贏線。</p>
+<h3>Bonus Game（Truth Realm）</h3>
+<p>落地 <strong>3 個 Scatter</strong> 觸發 Bonus。使用 Truth Realm 機制——盤面特定區域轉換，Conspiracy Features 觸發頻率大幅提升，Wild 覆蓋率增加，形成多輪連鎖爆發。</p>
+<h3>Super Bonus Game</h3>
+<p>落地 <strong>4+ 個 Scatter</strong> 進入 Super Bonus，所有 Conspiracy Features 同時啟動，Wild 和乘數覆蓋整個盤面，是最高潛力模式。</p>
+<h3>The Store（購買系統）</h3>
+<p>內含多種 Booster、Bonus Buy、Highlight Reels（播放若干轉取最高的3局）、Loot Box（Bronze/Silver/Gold 等級的 Enhanced Bonus）。<strong>Bronze Bonus (128×)</strong> RTP 96.6%；各級 Enhanced Bonus 有不同的 Star Level 決定獎勵規模。</p>`,
+ mechs:[
+  {icon:'🕊️',name:'Birds Aren\'t Real',type:'Conspiracy Feature',desc:'無人機鳥群飛過盤面，故障墜毀位置留下 Wild，是 4 種隨機特效中最常見的一種。'},
+  {icon:'📡',name:'5G Transmission',type:'Conspiracy Feature',desc:'5G Wild 攜帶 ×2–×5 乘數，可複製到空格或傳送乘數，形成連鎖 Wild 覆蓋。'},
+  {icon:'🦎',name:'The Reptilians Are Everywhere',type:'Conspiracy Feature',desc:'隨機選一種角色圖示，嘗試將其全部轉換為最高值角色，爆炸性加值時刻。'},
+  {icon:'💻',name:'It\'s All a Simulation',type:'Conspiracy Feature',desc:'重新模擬盤面套用更有利分布，是 4 種特效中最「確定性」的一種。'},
+  {icon:'🏪',name:'The Store（Loot Box 系統）',type:'購買系統',desc:'Bronze/Silver/Gold 三級 Enhanced Bonus，Highlight Reels 自動取最高三局，購買彈性極高。'}
+],
+ pros:['BWB Score 9/10 Shady Lady 最高評分','4 種 Conspiracy Features 主題高度統一','Super Bonus 全特效同時觸發極具爆發力','Wild 最高賠率 50× 基礎線贏不低','The Store 購買選項豐富'],
+ cons:['RTP 96.1%（非 96.5%，早期資料有誤）','下注上限 €50 偏低','5×5 + 15 Paylines 格式相對傳統','隨機特效無法保證每局觸發'],
+ rtps:[{label:'標準',val:96.50}]
+},
+{id:10,provider:'Shady Lady',name:'Black Friday',releaseDate:'2025-11-24',conn:'Paylines',grid:'5×4',rtp:'96.35',maxwin:'20000',vol:'High',bet:'0.10–50',
+ bwbScore:'8',hitFreq:'10.99%',
+ feat:['Free Spins','Bonus Buy','Multiplier','Wilds'],
+ img:'https://www.bigwinboard.com/wp-content/uploads/2025/09/Black-Friday-slot-1.jpg',
+ img2:'',
+ link:'https://www.bigwinboard.com/black-friday-shady-lady-slot-review/',
+ sum:'購物節黑色星期五搶購混亂諷刺主題。5×4 盤面 30 Paylines，RTP 96.35%。Road Rage Respins（Nudging Wild）、Parking Lot Stampede、Bonus Game（推進角色出界收集金幣，含 Pistol/Machine Gun/Laser/Nuke 武器系統），Karen 大姐橫跨 2 列攜帶最高金幣。Max Win 20,000×。BWB Score: 8/10',
+ rules:`<h3>Slot Overview（來源：BWB + SlotCatalog + AboutSlots）</h3>
+<p>Black Friday 是購物節搶購混亂諷刺主題，盤面為 <strong>5×4，30 條固定 Paylines</strong>，下注範圍 <strong>$/€0.10–€50</strong>，最高 RTP <strong>96.35%</strong>（另有 94.04% / 91.92% 版本），高波動。Hit Frequency <strong>10.99%</strong>，Bonus 觸發率 <strong>1 in 294 轉</strong>。Max Win <strong>20,000×</strong>。</p>
+<p><strong>圖示說明：</strong>低值商品（衛生紙、糕點、電池、按摩器，5 OAK = 2×）；高值 4 個購物者角色（5 OAK = 6×–20×）；Wild 為血跡百搭圖示，賠率同最高值圖示。</p>
+<h3>Road Rage Re-Spins ★ 核心機制</h3>
+<p>盤面可出現 3 種特殊角色（Cop、Protestor、Politician）。落地後觸發 Re-Spins，這些角色每轉<strong>向下 Nudge 一格</strong>，直到滑出底部。Re-Spins 期間可新增更多角色延長序列。</p>
+<h3>停車場踩踏特效</h3>
+<p>可在任意 Base Game 轉隨機觸發。停用所有低值圖示，僅保留高值圖示，可與 Road Rage Re-Spins 同時觸發。</p>
+<h3>Bonus Game（角色入侵系統）</h3>
+<p>落地 <strong>3 個 Scatter（Black Friday Logo）</strong>觸發。Bonus 無固定轉數，持續直到至少一個角色被推出底行。每轉新角色從頂部進入，所有現有角色下移一格，每個角色攜帶<strong>金幣值（Coin Value）</strong>，被消滅時收取。</p>
+<p>底部三個螢幕各輪顯示：Screen 1 & 2 = Booster（提升金幣值或武器乘數）/ Blank；Screen 3 = 武器 / Blank。</p>
+<p><strong>武器類型：</strong>Pistol — 消滅最底排隨機 1 個角色。Machine Gun — 消滅最底排所有角色。Laser — 消滅隨機 1 列所有角色。Nuke — 消滅盤面全部角色（一次清場）。</p>
+<p><strong>Brawl（角色打架）：</strong>每轉前可能隨機發生，全部角色互毆至最後 1 個存活者，勝者<strong>吸收所有敗者的金幣值</strong>。</p>
+<p><strong>Karen（特別角色）：</strong>可隨機進入盤面，橫跨 <strong>2 條相鄰列</strong>，攜帶最高金幣值，<strong>永遠贏得 Brawl</strong>。</p>
+<h3>Super Bonus Game</h3>
+<p>落地 <strong>4 個 Scatter</strong> 觸發 Super Bonus，規則與 Bonus 相同，但初始條件更有利（更多角色或更高金幣值）。</p>
+<h3>直購特色</h3>
+<p>Store 內含 Bonus Buy、Highlight Reels、Loot Box 等選項。</p>`,
+ mechs:[
+  {icon:'🚗',name:'Road Rage Re-Spins',type:'核心機制',desc:'特殊角色（Cop/Protestor/Politician）落地後 Nudge 向下，Re-Spins 持續至滑出底部，可連鎖延長。'},
+  {icon:'💣',name:'Bonus Game 武器系統',type:'Bonus 機制',desc:'Pistol/Machine Gun/Laser/Nuke 四種武器，配合金幣值累積，Nuke 一次清場觸感最強烈。'},
+  {icon:'👊',name:'Brawl（角色打架）',type:'隨機事件',desc:'每轉前隨機發生，角色互毆，勝者吸收所有金幣值，Karen 橫跨 2 列永遠勝出。'},
+  {icon:'🛍️',name:'Karen 特別角色',type:'最高值單位',desc:'隨機進入橫跨 2 列，攜帶最高金幣值，永遠贏得 Brawl，是最高爆發的關鍵。'}
+],
+ pros:['Bonus Game 武器系統創意十足','Karen Brawl 機制高度諷刺好笑','BWB Score 8/10 高評價','RTP 96.35% 系列最高之一','Road Rage Respins 基礎遊戲也有爆發感'],
+ cons:['Hit Freq 10.99% 極低，需要耐心','下注上限 €50 偏低','Bonus 觸發率 1 in 294 偏慢','Super Bonus 需要 4 Scatter 相對難觸發'],
+ rtps:[{label:'標準',val:96.40}]
+},
+];
+let nid=10,eid=null,cur='all',ss={k:'releaseDate',d:-1},selId=null;
+
+// ── SVG placeholder generator ──
+const PROV_COLORS = {
+  'Hacksaw Gaming': {bg:'#fff0eb', c1:'#e85c30', c2:'#ff9a70', emoji:'⚔️'},
+  'NoLimit City':   {bg:'#f3eeff', c1:'#7c4fd0', c2:'#b090f8', emoji:'☠️'},
+  'ELK Studios':    {bg:'#e8f9f7', c1:'#1aad9a', c2:'#60ded0', emoji:'🦌'},
+  "Play'n GO":      {bg:'#edfff3', c1:'#1ab868', c2:'#60e090', emoji:'🎮'},
+  'Shady Lady':     {bg:'#fff0f3', c1:'#e83058', c2:'#ff7090', emoji:'🎭'},
+};
+
+function makeSvgPlaceholder(name, provider) {
+  const pc = PROV_COLORS[provider] || {bg:'#f5f3ef', c1:'#9e9085', c2:'#c4bbb0', emoji:'🎰'};
+  const short = name.length > 14 ? name.slice(0,13)+'…' : name;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="130" viewBox="0 0 200 130">
+    <defs>
+      <linearGradient id="g${name.replace(/\W/g,'')}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:${pc.c1};stop-opacity:.15"/>
+        <stop offset="100%" style="stop-color:${pc.c2};stop-opacity:.3"/>
+      </linearGradient>
+    </defs>
+    <rect width="200" height="130" fill="${pc.bg}"/>
+    <rect width="200" height="130" fill="url(#g${name.replace(/\W/g,'')})"/>
+    <circle cx="100" cy="52" r="28" fill="${pc.c1}" opacity=".12"/>
+    <circle cx="100" cy="52" r="20" fill="${pc.c1}" opacity=".1"/>
+    <text x="100" y="62" text-anchor="middle" font-size="28" font-family="serif">${pc.emoji}</text>
+    <text x="100" y="90" text-anchor="middle" font-size="11" font-weight="700" font-family="sans-serif" fill="${pc.c1}">${short}</text>
+    <text x="100" y="106" text-anchor="middle" font-size="9" font-family="sans-serif" fill="${pc.c1}" opacity=".7">${provider}</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+function makeThumbSvg(name, provider) {
+  const pc = PROV_COLORS[provider] || {bg:'#f5f3ef', c1:'#9e9085', c2:'#c4bbb0', emoji:'🎰'};
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="96" height="64" viewBox="0 0 96 64">
+    <rect width="96" height="64" fill="${pc.bg}"/>
+    <rect width="96" height="64" fill="${pc.c1}" opacity=".1"/>
+    <text x="48" y="40" text-anchor="middle" font-size="22" font-family="serif">${pc.emoji}</text>
+  </svg>`;
+  return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+// image load helper: try external, fallback to SVG
+function imgWithFallback(src, name, provider, cls, style='') {
+  const fb = makeThumbSvg(name, provider);
+  if (!src) return `<img class="${cls}" src="${fb}" alt="${name}" style="${style}">`;
+  return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" onerror="this.src='${fb}';this.onerror=null">`;
+}
+
+function heroImg(src, name, provider) {
+  const fb = makeSvgPlaceholder(name, provider);
+  if (!src) return `<img src="${fb}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+  return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.src='${fb}';this.onerror=null">`;
+}
+
+// ── helpers ──
+function pk(p){return{'Hacksaw Gaming':'hacksaw','NoLimit City':'nolimit','ELK Studios':'elk',"Play'n GO":'playngo','Shady Lady':'shady'}[p]||''}
+function fd(s){return s?new Date(s).toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'}):'—'}
+function ml(s){if(!s)return'';const d=new Date(s);return`${d.getFullYear()} 年 ${d.getMonth()+1} 月`}
+function vcl(v){return{Extreme:'ve',High:'vh','Medium-High':'vm',Medium:'vm'}[v]||'vm'}
+function ccl(c){return{Ways:'cw','Cluster Pays':'cc','Scatter Pays':'cs',Paylines:'cl','Meter Pay':'cm'}[c]||'cw'}
+function bcl(p){return{'Hacksaw Gaming':'b-hk','NoLimit City':'b-nl','ELK Studios':'b-elk',"Play'n GO":'b-png','Shady Lady':'b-sl'}[p]||''}
+
+function filt(pf=null){
+  const q=(document.getElementById('q')||{}).value?.toLowerCase()||'';
+  let r=G.filter(g=>(pf?g.provider===pf:true)&&(!q||g.name.toLowerCase().includes(q)||g.provider.toLowerCase().includes(q)));
+  r.sort((a,b)=>{let av=a[ss.k]||'',bv=b[ss.k]||'';
+    if(ss.k==='rtp'||ss.k==='maxwin'){av=parseFloat(av)||0;bv=parseFloat(bv)||0}
+    return av<bv?-ss.d:av>bv?ss.d:0});
+  return r;
+}
+
+function rowHtml(g,i){
+  const ftAll=['Free Spins','Bonus Buy','Cascading','Multiplier','Wilds','xNudge','X-iter'];
+  const ft=ftAll.map(f=>`<span class="ftag${(g.feat||[]).includes(f)?'':' off'}">${f}</span>`).join('');
+  return`<tr data-id="${g.id}" style="animation-delay:${i*.022}s" class="${g.id===selId?'sel':''}" onclick="openPanel(${g.id})">
+    <td>${imgWithFallback(g.img, g.name, g.provider, 't-thumb')}</td>
+    <td><div class="t-name">${g.name}</div><div class="t-sub">${g.sum?g.sum.slice(0,55)+'…':''}</div></td>
+    <td><span class="badge ${bcl(g.provider)}">${g.provider}</span></td>
+    <td style="color:var(--tx3);font-size:11px;font-weight:700;white-space:nowrap">${fd(g.releaseDate)}</td>
+    <td>${g.conn?`<span class="conn ${ccl(g.conn)}">${g.conn}</span>`:'—'}</td>
+    <td class="grd">${g.grid||'—'}</td>
+    <td class="rtp">${g.rtp?g.rtp+'%':'—'}</td>
+    <td class="mxw">${g.maxwin?'x'+Number(g.maxwin).toLocaleString():'—'}</td>
+    <td>${g.vol?`<span class="vbadge ${vcl(g.vol)}">${g.vol}</span>`:'—'}</td>
+    <td><div style="display:flex;gap:4px;flex-wrap:wrap">${ft}</div></td>
+    <td class="act" onclick="event.stopPropagation()"><div style="display:flex;gap:4px">
+      <button onclick="openModal(${g.id})">✏️</button>
+      <button class="d" onclick="delG(${g.id})">🗑️</button>
+    </div></td>
+  </tr>`;
+}
+
+function renderMain(){
+  const list=filt();
+  const tb=document.getElementById('tb');
+  const empty=document.getElementById('empty');
+  if(!list.length){tb.innerHTML='';empty.style.display='block';return}
+  empty.style.display='none';
+  let html='',last='';
+  list.forEach((g,i)=>{
+    const m=ml(g.releaseDate);
+    if(m!==last){last=m;html+=`<tr class="mdiv"><td colspan="11" style="padding:14px 14px 4px"><span class="mlbl">📅 ${m}</span></td></tr>`}
+    html+=rowHtml(g,i);
+  });
+  tb.innerHTML=html;
+  const now=new Date();
+  const mo=G.filter(g=>{const d=new Date(g.releaseDate);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()}).length;
+  const mws=G.filter(g=>g.maxwin).map(g=>parseInt(g.maxwin));
+  document.getElementById('st-tot').textContent=G.length;
+  document.getElementById('st-mo').textContent=mo;
+  document.getElementById('st-mw').textContent='x'+(mws.length?Math.round(mws.reduce((a,b)=>a+b,0)/mws.length).toLocaleString():'—');
+}
+
+function sort(k){ss.k===k?ss.d*=-1:(ss.k=k,ss.d=-1);renderMain()}
+
+// ── SIDE PANEL ──
+function openPanel(id){
+  const g=G.find(x=>x.id===id);if(!g)return;
+  selId=id;
+  document.querySelectorAll('tbody tr[data-id]').forEach(r=>r.classList.toggle('sel',+r.dataset.id===id));
+  const pi=PROV[g.provider]||{color:'var(--peach)',bc:'b-hk',stripe:'var(--peach)'};
+  const rtpRows=(g.rtps||[{label:'標準',val:parseFloat(g.rtp)||96}]).map(r=>{
+    const mn=50,mx=99,w=Math.max(0,Math.min(100,(r.val-mn)/(mx-mn)*100));
+    const c=r.val>=96?'var(--mint)':r.val>=93?'var(--yellow)':'var(--rose)';
+    return`<div class="rtp-row">
+      <span class="rtp-lbl">${r.label}</span>
+      <div class="rtp-bar-bg"><div class="rtp-bar-fill" style="width:${w}%;background:${c}"></div></div>
+      <span class="rtp-v">${r.val}%</span>
+    </div>`;
+  }).join('');
+  const mechHtml=(g.mechs||[]).map(m=>`
+    <div class="mech-card">
+      <div class="mech-icon">${m.icon}</div>
+      <div>
+        <div class="mech-name">${m.name}</div>
+        ${m.type?`<span class="mech-tag">${m.type}</span>`:''}
+        <div class="mech-desc">${m.desc||''}</div>
+      </div>
+    </div>`).join('');
+  const prosHtml=(g.pros||[]).map(p=>`<li>${p}</li>`).join('');
+  const consHtml=(g.cons||[]).map(c=>`<li>${c}</li>`).join('');
+
+  document.getElementById('sp-body').innerHTML=`
+    <div class="sp-hero">
+      ${heroImg(g.img, g.name, g.provider)}
+      <div class="sp-hero-overlay"></div>
+      <div class="sp-hero-info">
+        <div class="sp-hero-name">${g.name}</div>
+        <div class="sp-hero-sub">
+          <span class="badge ${pi.bc}">${g.provider}</span>
+          ${g.vol?`<span class="vbadge ${vcl(g.vol)}">${g.vol}</span>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="sp-strip">
+      <div class="sp-strip-item"><div class="sv rtp">${g.rtp?g.rtp+'%':'—'}</div><div class="sk">RTP</div></div>
+      <div class="sp-strip-item"><div class="sv mxw">${g.maxwin?'x'+Number(g.maxwin).toLocaleString():'—'}</div><div class="sk">Max Win</div></div>
+      <div class="sp-strip-item"><div class="sv grd">${g.grid||'—'}</div><div class="sk">盤面</div></div>
+      <div class="sp-strip-item"><div class="sv" style="color:var(--tx2);font-size:11px;font-weight:800">${g.bet?g.bet:'—'}</div><div class="sk">下注範圍</div></div>
+    </div>
+    <div class="sp-tabs">
+      <div class="sp-tab on" onclick="stab(this,'pn-ov')">概覽</div>
+      <div class="sp-tab" onclick="stab(this,'pn-rules')">完整規則</div>
+      <div class="sp-tab" onclick="stab(this,'pn-mechs')">機制說明</div>
+      <div class="sp-tab" onclick="stab(this,'pn-eval')">評估</div>
+    </div>
+
+    <div id="pn-ov" class="sp-pane on">
+      <div class="sec"><div class="sec-h">基本規格</div>
+        <table class="spec-tbl">
+          <tr><td>廠商</td><td><span class="badge ${pi.bc}">${g.provider}</span></td></tr>
+          <tr><td>發布日期</td><td>${fd(g.releaseDate)}</td></tr>
+          <tr><td>連線類型</td><td>${g.conn?`<span class="conn ${ccl(g.conn)}">${g.conn}</span>`:'—'}</td></tr>
+          <tr><td>盤面</td><td><span class="grd">${g.grid||'—'}</span></td></tr>
+          <tr><td>波動度</td><td>${g.vol?`<span class="vbadge ${vcl(g.vol)}">${g.vol}</span>`:'—'}</td></tr>
+          <tr><td>下注範圍</td><td style="font-weight:800">${g.bet||'—'}</td></tr>
+          <tr><td>Max Win</td><td class="mxw">${g.maxwin?'x'+Number(g.maxwin).toLocaleString():'—'}</td></tr>
+          <tr><td>Hit Freq</td><td style="font-weight:700;color:var(--tx2)">${g.hitFreq||'—'}</td></tr>
+          <tr><td>BWB Score</td><td>${g.bwbScore&&g.bwbScore!='N/A'?`<span style="display:inline-flex;align-items:center;gap:4px;background:${+g.bwbScore>=9?'#e8fff5':+g.bwbScore>=7?'#fff8e8':'#fff0f0'};border:1.5px solid ${+g.bwbScore>=9?'var(--mint)':+g.bwbScore>=7?'var(--yellow)':'var(--rose)'};color:${+g.bwbScore>=9?'var(--mint)':+g.bwbScore>=7?'#c89820':'var(--rose)'};font-weight:900;font-size:13px;padding:2px 10px;border-radius:50px">${g.bwbScore}<span style="font-size:10px;font-weight:600;opacity:.7">/10</span></span>`:'<span style="color:var(--tx4);font-weight:700">N/A</span>'}</td></tr>
+        </table>
+      </div>
+      <div class="sec"><div class="sec-h">功能標籤</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${(g.feat||[]).map(f=>`<span class="ftag">${f}</span>`).join('')}</div>
+      </div>
+      <div class="sec"><div class="sec-h">主題摘要</div>
+        <div style="font-size:12.5px;line-height:1.8;color:var(--tx2);font-weight:500">${g.sum||'—'}</div>
+      </div>
+      <div class="sec"><div class="sec-h">RTP 版本比較</div>
+        <div class="rtp-wrap">${rtpRows}</div>
+      </div>
+      ${g.bwbVerdict?`<div class="sec"><div class="sec-h">BWB Verdict</div><div style="font-size:12px;line-height:1.8;color:var(--tx2);font-style:italic;font-weight:600;background:var(--bg);border-radius:var(--r-sm);padding:10px 12px;border-left:3px solid var(--peach)">"${g.bwbVerdict}"</div></div>`:''}
+      ${g.link?`<a class="demo-btn" href="${g.link}" target="_blank">🎮 Demo / Review →</a>`:''}
+    </div>
+
+    <div id="pn-rules" class="sp-pane">
+      <div class="rules-body">${g.rules||'<p>規則說明尚未填寫。</p>'}</div>
+    </div>
+
+    <div id="pn-mechs" class="sp-pane">
+      <div class="sec-h" style="margin-bottom:12px">核心機制卡片</div>
+      <div class="mech-list">${mechHtml||'<p style="color:var(--tx3);font-size:12px;font-weight:600">機制說明尚未填寫。</p>'}</div>
+    </div>
+
+    <div id="pn-eval" class="sp-pane">
+      <div class="sec-h" style="margin-bottom:12px">優缺點分析</div>
+      <div class="pc-grid">
+        <div class="pc-box pro"><h4>✓ 優點</h4><ul>${prosHtml||'<li>暫無資料</li>'}</ul></div>
+        <div class="pc-box con"><h4>✕ 缺點</h4><ul>${consHtml||'<li>暫無資料</li>'}</ul></div>
+      </div>
+    </div>
+  `;
+  document.getElementById('sp').classList.add('open');
+}
+
+function closePanel(){
+  document.getElementById('sp').classList.remove('open');
+  selId=null;
+  document.querySelectorAll('tbody tr.sel').forEach(r=>r.classList.remove('sel'));
+}
+function stab(el,id){
+  document.querySelectorAll('.sp-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.sp-pane').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById(id)?.classList.add('on');
+}
+
+// ── PROVIDER PAGES ──
+function renderProv(pname){
+  const key=pk(pname);const pi=PROV[pname]||{};const el=document.getElementById('pg-'+key);
+  const pG=G.filter(g=>g.provider===pname);
+  const months={};pG.forEach(g=>{const m=ml(g.releaseDate)||'未知';(months[m]=months[m]||[]).push(g)});
+  const sortedM=Object.keys(months).sort((a,b)=>b.localeCompare(a));
+  const now=new Date();
+  const moN=pG.filter(g=>{const d=new Date(g.releaseDate);return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()}).length;
+  const mbtns=sortedM.map((m,i)=>`<button class="mtab${i===0?' on':''}" onclick="filterPM(this,'${key}','${m}')">${m}</button>`).join('');
+  function tbl(list){
+    if(!list.length)return'<div class="empty"><div class="ei">🔍</div><p>本月無新遊戲</p></div>';
+    return`<div class="tcard" style="margin-top:0"><table>
+      <thead><tr><th style="width:52px"></th><th>遊戲名稱</th><th>發布日期</th><th>連線</th><th>盤面</th><th>RTP</th><th>Max Win</th><th>波動</th><th>功能</th></tr></thead>
+      <tbody>${list.map((g,i)=>{
+        const ft=(g.feat||[]).map(f=>`<span class="ftag">${f}</span>`).join('');
+        return`<tr style="animation-delay:${i*.03}s;cursor:pointer" onclick="openPanel(${g.id})">
+          <td>${imgWithFallback(g.img, g.name, g.provider, 't-thumb')}</td>
+          <td><div class="t-name">${g.name}</div><div class="t-sub">${g.sum?g.sum.slice(0,50)+'…':''}</div></td>
+          <td style="color:var(--tx3);font-size:11px;font-weight:700;white-space:nowrap">${fd(g.releaseDate)}</td>
+          <td>${g.conn?`<span class="conn ${ccl(g.conn)}">${g.conn}</span>`:'—'}</td>
+          <td class="grd">${g.grid||'—'}</td>
+          <td class="rtp">${g.rtp?g.rtp+'%':'—'}</td>
+          <td class="mxw">${g.maxwin?'x'+Number(g.maxwin).toLocaleString():'—'}</td>
+          <td>${g.vol?`<span class="vbadge ${vcl(g.vol)}">${g.vol}</span>`:'—'}</td>
+          <td><div style="display:flex;gap:4px;flex-wrap:wrap">${ft}</div></td>
+        </tr>`}).join('')}
+      </tbody></table></div>`;
+  }
+  el.innerHTML=`
+    <div class="prov-banner">
+      <div class="prov-stripe" style="background:${pi.stripe||pi.color}"></div>
+      <div>
+        <div class="prov-name">${pname}</div>
+        <div class="prov-info">成立：${pi.founded||'—'} · ${pi.hq||'—'} · <a href="${pi.web||'#'}" target="_blank">${pi.web||''}</a></div>
+      </div>
+      <div class="month-tabs">${mbtns}</div>
+    </div>
+    <div class="pstats">
+      <div class="stat s0"><div class="n">${pG.length}</div><div class="l">總遊戲</div></div>
+      <div class="stat s1"><div class="n">${moN}</div><div class="l">本月新增</div></div>
+      <div class="stat s3"><div class="n">${pG.filter(g=>parseInt(g.maxwin)>=10000).length}</div><div class="l">Max Win≥10K</div></div>
+    </div>
+    <div id="pt-${key}">${tbl(months[sortedM[0]]||[])}</div>
+    <div class="pnote"><strong>廠商簡介：</strong><br>${pi.about||'—'}</div>
+  `;
+  el._m=months;el._t=tbl;
+}
+
+function filterPM(btn,key,m){
+  const el=document.getElementById('pg-'+key);
+  el.querySelectorAll('.mtab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
+  const t=document.getElementById('pt-'+key);
+  if(t&&el._t)t.innerHTML=el._t(el._m[m]||[]);
+}
+
+function goPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(n=>n.classList.remove('on'));
+  document.getElementById('pg-'+name).classList.add('on');
+  document.getElementById('nb-'+name).classList.add('on');
+  cur=name;
+  const titles={all:'全部遊戲 🎮',hacksaw:'Hacksaw Gaming 月報 🧡',nolimit:'NoLimit City 月報 💜',elk:'ELK Studios 月報 💚',playngo:"Play'n GO 月報 🍀",shady:'Shady Lady 月報 🌹'};
+  document.getElementById('page-h').textContent=titles[name]||name;
+  if(name!=='all'){const pm={hacksaw:'Hacksaw Gaming',nolimit:'NoLimit City',elk:'ELK Studios',playngo:"Play'n GO",shady:'Shady Lady'};renderProv(pm[name])}
+  closePanel();
+}
+
+// ── MODAL ──
+function openModal(id=null){
+  eid=id;clearMod();
+  document.getElementById('m-title').textContent=id?'✏️ 編輯遊戲':'＋ 新增遊戲 ✨';
+  if(id){
+    const g=G.find(x=>x.id===id);
+    if(g){
+      const m={name:g.name,prov:g.provider,date:g.releaseDate,conn:g.conn,grid:g.grid,rtp:g.rtp,mw:g.maxwin,vol:g.vol,bet:g.bet,img:g.img,link:g.link,sum:g.sum,rules:g.rules,
+        mechs:g.mechs?JSON.stringify(g.mechs,null,2):'',
+        pros:(g.pros||[]).join('\n'),cons:(g.cons||[]).join('\n')};
+      Object.entries(m).forEach(([k,v])=>{const el=document.getElementById('m-'+k);if(el)el.value=v||''});
+      document.querySelectorAll('.chks input[type=checkbox]').forEach(c=>c.checked=(g.feat||[]).includes(c.value));
+    }
+  }else{document.getElementById('m-date').value=new Date().toISOString().slice(0,10)}
+  document.getElementById('modal-ov').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-ov').classList.remove('open');eid=null}
+function clearMod(){
+  ['m-name','m-prov','m-date','m-conn','m-grid','m-rtp','m-mw','m-vol','m-bet','m-img','m-link','m-sum','m-rules','m-mechs','m-pros','m-cons'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+  document.querySelectorAll('.chks input[type=checkbox]').forEach(c=>c.checked=false);
+}
+function saveGame(){
+  const name=document.getElementById('m-name').value.trim();
+  const prov=document.getElementById('m-prov').value;
+  if(!name||!prov){alert('請填寫遊戲名稱和廠商 😊');return}
+  let mechs=null;try{const v=document.getElementById('m-mechs').value.trim();if(v)mechs=JSON.parse(v)}catch(e){}
+  const d={name,provider:prov,releaseDate:document.getElementById('m-date').value,
+    conn:document.getElementById('m-conn').value,grid:document.getElementById('m-grid').value.trim(),
+    rtp:document.getElementById('m-rtp').value.trim(),maxwin:document.getElementById('m-mw').value.trim(),
+    vol:document.getElementById('m-vol').value,bet:document.getElementById('m-bet').value.trim(),
+    img:document.getElementById('m-img').value.trim(),link:document.getElementById('m-link').value.trim(),
+    sum:document.getElementById('m-sum').value.trim(),rules:document.getElementById('m-rules').value.trim(),
+    mechs,pros:document.getElementById('m-pros').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    cons:document.getElementById('m-cons').value.split('\n').map(s=>s.trim()).filter(Boolean),
+    feat:[...document.querySelectorAll('.chks input[type=checkbox]:checked')].map(c=>c.value)};
+  if(eid){const i=G.findIndex(g=>g.id===eid);if(i!==-1)G[i]={...G[i],...d}}else G.push({id:nid++,...d});
+  closeModal();renderMain();
+}
+function delG(id){if(!confirm('確定刪除？'))return;G=G.filter(g=>g.id!==id);if(selId===id)closePanel();renderMain()}
+
+function exportCSV(){
+  const h=['遊戲名稱','廠商','發布日期','連線','盤面','RTP%','Max Win','波動','下注範圍','功能','摘要','連結'];
+  const rows=filt().map(g=>[g.name,g.provider,g.releaseDate,g.conn,g.grid,g.rtp,g.maxwin,g.vol,g.bet,(g.feat||[]).join('/'),g.sum,g.link].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
+  const csv='\uFEFF'+[h.join(','),...rows].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`slotdb-${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel()});
+document.getElementById('modal-ov').addEventListener('click',e=>{if(e.target===document.getElementById('modal-ov'))closeModal()});
+renderMain();
+</script>
+</body>
+</html>
