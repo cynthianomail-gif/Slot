@@ -2542,9 +2542,6 @@ function saveToStorage(){try{localStorage.setItem('slotdb_v1',JSON.stringify({g:
 // ── _imgOverrides / _linkOverrides 在 localStorage merge 後重新套用，確保不被覆蓋 ──
 G.forEach(g=>{if(_imgOverrides[g.id])g.img=_imgOverrides[g.id];});
 G.forEach(g=>{if(_linkOverrides[g.id])g.link=_linkOverrides[g.id];});
-// ── GitHub Pages 圖片 proxy（最後一步）──
-if(location.protocol!=='file:'){G.forEach(g=>{if(g.img&&g.img.includes('bigwinboard.com'))g.img='https://images.weserv.nl/?url='+encodeURIComponent(g.img);});}
-
 // ── SVG placeholder generator ──
 const PROV_COLORS = {
   'Hacksaw Gaming': {bg:'#fff0eb', c1:'#e85c30', c2:'#ff9a70', emoji:'⚔️'},
@@ -2585,17 +2582,32 @@ function makeThumbSvg(name, provider) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-// image load helper: try external, fallback to SVG
+// ── 圖片 fallback 輔助：直連失敗 → proxy → SVG ──
+function _bwbProxy(src){
+  return (src&&src.includes('bigwinboard.com')&&location.protocol!=='file:')
+    ?'https://images.weserv.nl/?url='+encodeURIComponent(src):null;
+}
+function _imgFallback(el,proxy,fb){
+  if(!el._p&&proxy){el._p=1;el.onerror=function(){el.onerror=null;el.src=fb};el.src=proxy}
+  else{el.onerror=null;el.src=fb}
+}
 function imgWithFallback(src, name, provider, cls, style='') {
   const fb = makeThumbSvg(name, provider);
   if (!src) return `<img class="${cls}" src="${fb}" alt="${name}" style="${style}">`;
-  return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" referrerpolicy="no-referrer" onerror="this.src='${fb}';this.onerror=null">`;
+  const proxy = _bwbProxy(src);
+  const oe = proxy
+    ? `onerror="_imgFallback(this,'${proxy}','${fb}')"`
+    : `onerror="this.onerror=null;this.src='${fb}'"`;
+  return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" referrerpolicy="no-referrer" ${oe}>`;
 }
-
 function heroImg(src, name, provider) {
   const fb = makeSvgPlaceholder(name, provider);
   if (!src) return `<img src="${fb}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block">`;
-  return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" referrerpolicy="no-referrer" onerror="this.src='${fb}';this.onerror=null">`;
+  const proxy = _bwbProxy(src);
+  const oe = proxy
+    ? `onerror="_imgFallback(this,'${proxy}','${fb}')"`
+    : `onerror="this.onerror=null;this.src='${fb}'"`;
+  return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" referrerpolicy="no-referrer" ${oe}>`;
 }
 
 // ── helpers ──
