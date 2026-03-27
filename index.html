@@ -2398,6 +2398,7 @@ const _linkOverrides={
 104:'https://www.bigwinboard.com/steaming-reels-pragmatic-play-slot-review/'
 };
 G.forEach(g=>{if(_linkOverrides[g.id])g.link=_linkOverrides[g.id];});
+G.forEach(g=>{if(g.img&&g.img.includes('bigwinboard.com'))g.img='https://images.weserv.nl/?url='+g.img.replace('https://','');});
 let nid=105,eid=null,cur='all',ss={k:'releaseDate',d:-1},selId=null;
 
 // ── SVG placeholder generator ──
