@@ -2582,16 +2582,34 @@ function makeThumbSvg(name, provider) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-// ── 圖片載入：直接在 img 加 referrerpolicy="no-referrer" 繞過 hotlink 保護 ──
+// ── 圖片載入：直連(no-referrer) → proxy fallback → SVG ──
+function _imgErr(el){
+  const proxy=el.dataset.proxy;
+  if(proxy&&!el._p){
+    el._p=1;
+    el.onerror=function(){el.onerror=null;el.src=makeThumbSvg(el.alt,el.dataset.pv||'');};
+    el.src=proxy;
+  }else{el.onerror=null;el.src=makeThumbSvg(el.alt,el.dataset.pv||'');}
+}
+function _heroErr(el){
+  const proxy=el.dataset.proxy;
+  if(proxy&&!el._p){
+    el._p=1;
+    el.onerror=function(){el.onerror=null;el.src=makeSvgPlaceholder(el.alt,el.dataset.pv||'');};
+    el.src=proxy;
+  }else{el.onerror=null;el.src=makeSvgPlaceholder(el.alt,el.dataset.pv||'');}
+}
 function imgWithFallback(src, name, provider, cls, style='') {
-  const fb = makeThumbSvg(name, provider);
-  if (!src) return `<img class="${cls}" src="${fb}" alt="${name}" style="${style}">`;
-  return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${fb}'">`;
+  if (!src) return `<img class="${cls}" src="${makeThumbSvg(name,provider)}" alt="${name}" style="${style}">`;
+  const proxy=(location.protocol!=='file:'&&src.includes('bigwinboard.com'))
+    ?'https://images.weserv.nl/?url='+encodeURIComponent(src):'';
+  return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" referrerpolicy="no-referrer" data-proxy="${proxy}" data-pv="${provider}" onerror="_imgErr(this)">`;
 }
 function heroImg(src, name, provider) {
-  const fb = makeSvgPlaceholder(name, provider);
-  if (!src) return `<img src="${fb}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block">`;
-  return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${fb}'">`;
+  if (!src) return `<img src="${makeSvgPlaceholder(name,provider)}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+  const proxy=(location.protocol!=='file:'&&src.includes('bigwinboard.com'))
+    ?'https://images.weserv.nl/?url='+encodeURIComponent(src):'';
+  return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" referrerpolicy="no-referrer" data-proxy="${proxy}" data-pv="${provider}" onerror="_heroErr(this)">`;
 }
 
 // ── helpers ──
