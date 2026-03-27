@@ -2582,32 +2582,36 @@ function makeThumbSvg(name, provider) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
 }
 
-// ── 圖片 fallback 輔助：直連失敗 → proxy → SVG ──
-function _bwbProxy(src){
-  return (src&&src.includes('bigwinboard.com')&&location.protocol!=='file:')
-    ?'https://images.weserv.nl/?url='+encodeURIComponent(src):null;
-}
-function _imgFallback(el,proxy,fb){
-  if(!el._p&&proxy){el._p=1;el.onerror=function(){el.onerror=null;el.src=fb};el.src=proxy}
-  else{el.onerror=null;el.src=fb}
+// ── 圖片載入：fetch+blob via weserv.nl（GitHub Pages 繞過 hotlink 保護）──
+const _blobCache={};
+function _loadProxyImg(el,origSrc,fb){
+  if(_blobCache[origSrc]){el.src=_blobCache[origSrc];return;}
+  const proxy='https://images.weserv.nl/?url='+encodeURIComponent(origSrc);
+  fetch(proxy)
+    .then(r=>{if(!r.ok)throw 0;return r.blob()})
+    .then(b=>{const u=URL.createObjectURL(b);_blobCache[origSrc]=u;el.src=u;})
+    .catch(()=>{el.src=fb;});
 }
 function imgWithFallback(src, name, provider, cls, style='') {
   const fb = makeThumbSvg(name, provider);
   if (!src) return `<img class="${cls}" src="${fb}" alt="${name}" style="${style}">`;
-  const proxy = _bwbProxy(src);
-  const oe = proxy
-    ? `onerror="_imgFallback(this,'${proxy}','${fb}')"`
-    : `onerror="this.onerror=null;this.src='${fb}'"`;
-  return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" referrerpolicy="no-referrer" ${oe}>`;
+  if (src.includes('bigwinboard.com') && location.protocol!=='file:') {
+    const id='img_'+Math.random().toString(36).slice(2);
+    // 渲染後立即 fetch，成功則換成 blob URL，否則顯示 SVG
+    setTimeout(()=>{const el=document.getElementById(id);if(el)_loadProxyImg(el,src,fb);},0);
+    return `<img id="${id}" class="${cls}" src="${fb}" alt="${name}" style="${style}">`;
+  }
+  return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${fb}'">`;
 }
 function heroImg(src, name, provider) {
   const fb = makeSvgPlaceholder(name, provider);
   if (!src) return `<img src="${fb}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block">`;
-  const proxy = _bwbProxy(src);
-  const oe = proxy
-    ? `onerror="_imgFallback(this,'${proxy}','${fb}')"`
-    : `onerror="this.onerror=null;this.src='${fb}'"`;
-  return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" referrerpolicy="no-referrer" ${oe}>`;
+  if (src.includes('bigwinboard.com') && location.protocol!=='file:') {
+    const id='img_'+Math.random().toString(36).slice(2);
+    setTimeout(()=>{const el=document.getElementById(id);if(el)_loadProxyImg(el,src,fb);},0);
+    return `<img id="${id}" src="${fb}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+  }
+  return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${fb}'">`;
 }
 
 // ── helpers ──
