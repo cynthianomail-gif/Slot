@@ -2542,6 +2542,13 @@ function saveToStorage(){try{localStorage.setItem('slotdb_v1',JSON.stringify({g:
 // ── _imgOverrides / _linkOverrides 在 localStorage merge 後重新套用，確保不被覆蓋 ──
 G.forEach(g=>{if(_imgOverrides[g.id])g.img=_imgOverrides[g.id];});
 G.forEach(g=>{if(_linkOverrides[g.id])g.link=_linkOverrides[g.id];});
+// ── 清理 localStorage 舊版 weserv proxy 前綴，還原成乾淨的 bigwinboard URL ──
+G.forEach(g=>{
+  if(g.img&&g.img.includes('weserv.nl')){
+    const m=g.img.match(/[?&]url=(.+?)(?:&(?!url=)|$)/);
+    if(m){let u=decodeURIComponent(m[1]);if(!u.startsWith('http'))u='https://'+u;g.img=u;}
+  }
+});
 // ── SVG placeholder generator ──
 const PROV_COLORS = {
   'Hacksaw Gaming': {bg:'#fff0eb', c1:'#e85c30', c2:'#ff9a70', emoji:'⚔️'},
@@ -2601,13 +2608,13 @@ function _heroErr(el){
 }
 function imgWithFallback(src, name, provider, cls, style='') {
   if (!src) return `<img class="${cls}" src="${makeThumbSvg(name,provider)}" alt="${name}" style="${style}">`;
-  const proxy=(location.protocol!=='file:'&&src.includes('bigwinboard.com'))
+  const proxy=(location.protocol!=='file:'&&src.includes('bigwinboard.com')&&!src.includes('weserv.nl'))
     ?'https://images.weserv.nl/?url='+encodeURIComponent(src):'';
   return `<img class="${cls}" src="${src}" alt="${name}" style="${style}" referrerpolicy="no-referrer" data-proxy="${proxy}" data-pv="${provider}" onerror="_imgErr(this)">`;
 }
 function heroImg(src, name, provider) {
   if (!src) return `<img src="${makeSvgPlaceholder(name,provider)}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block">`;
-  const proxy=(location.protocol!=='file:'&&src.includes('bigwinboard.com'))
+  const proxy=(location.protocol!=='file:'&&src.includes('bigwinboard.com')&&!src.includes('weserv.nl'))
     ?'https://images.weserv.nl/?url='+encodeURIComponent(src):'';
   return `<img src="${src}" alt="${name}" style="width:100%;height:100%;object-fit:cover;display:block" referrerpolicy="no-referrer" data-proxy="${proxy}" data-pv="${provider}" onerror="_heroErr(this)">`;
 }
