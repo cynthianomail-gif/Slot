@@ -462,22 +462,24 @@ async function pushToGitHub(){
   if(lbl)lbl.textContent='同步中…';
   if(btn)btn.disabled=true;
   try{
-    const info=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/'+GH_FILE,{
+    // 取得現有檔案的 SHA（若檔案不存在則為 undefined，API 仍允許 PUT 建立新檔）
+    const infoRes=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/'+GH_FILE,{
       headers:{Authorization:'token '+token,Accept:'application/vnd.github.v3+json'}
-    }).then(r=>r.json());
-    if(!info.sha)throw new Error('無法取得檔案資訊');
+    });
+    const info=await infoRes.json();
+    if(infoRes.status!==200&&infoRes.status!==404)throw new Error(info.message||'API 錯誤 '+infoRes.status);
+    const sha=info.sha; // 新檔案時為 undefined，GitHub API 允許不帶 sha 建立新檔
     const ts=Date.now();
-    const dataContent='// ── SLOT DB DATA ── (此檔案由系統自動更新，請勿手動編輯)
-var _DB='+JSON.stringify({ts,nid,g:G})+';
-';
+    const dataContent='// ── SLOT DB DATA ── (此檔案由系統自動更新，請勿手動編輯)\nvar _DB='+JSON.stringify({ts,nid,g:G})+';\n';
     const encoded=btoa(unescape(encodeURIComponent(dataContent)));
+    const body={message:'資料更新 '+new Date().toISOString().slice(0,16).replace('T',' '),content:encoded};
+    if(sha)body.sha=sha; // 更新現有檔案才需要 sha
     const res=await fetch('https://api.github.com/repos/'+GH_REPO+'/contents/'+GH_FILE,{
       method:'PUT',
       headers:{Authorization:'token '+token,Accept:'application/vnd.github.v3+json','Content-Type':'application/json'},
-      body:JSON.stringify({message:'資料更新 '+new Date().toISOString().slice(0,16).replace('T',' '),content:encoded,sha:info.sha})
+      body:JSON.stringify(body)
     });
     if(res.ok){
-      // 推送成功後，更新 localStorage 的 ts 讓它和 data.js 同步
       _DB.ts=ts;
       saveToStorage();
       showToast('✅ 已同步至 GitHub！');
@@ -485,7 +487,7 @@ var _DB='+JSON.stringify({ts,nid,g:G})+';
       const e=await res.json();throw new Error(e.message||'上傳失敗');
     }
   }catch(e){showToast('❌ 同步失敗：'+e.message);}
-  finally{if(btn)btn.disabled=false;if(lbl)lbl.textContent='GitHub';}
+  finally{if(btn)btn.disabled=false;if(lbl)lbl.textContent=ghToken()?'已連接':'GitHub';}
 }
 
 function ghSetToken(t){localStorage.setItem('gh_token',t);}
@@ -496,8 +498,6 @@ function updateGHBtn(){
   if(ghToken()){lbl.textContent='已連接';btn.style.color='var(--mint,#4caf7d)';}
   else{lbl.textContent='GitHub';btn.style.color='';}
 }
-function buildHTML(){
-
 function openGHModal(){
   const cur=ghToken();
   document.getElementById('gh-modal-wrap')?.remove();
